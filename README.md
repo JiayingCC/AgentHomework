@@ -2,6 +2,20 @@
 
 A workspace for homework, small experiments, and notes while learning agentic workflows.
 
+## Current project: Mindplay
+
+[Mindplay](assignments/02-mindplay/README.md) is a psychology-learning playground with three mini-games, a knowledge garden, and an interactive guide to agent workflows. It uses pastel gradients, textured glass, and an original illustrated mind mascot.
+
+- [Website source](assignments/02-mindplay/site/)
+- [Actual agent-workflow record](notes/mindplay-workflow.md)
+- [Research and sources](notes/psychology-research.md)
+- [Tests](assignments/02-mindplay/tests/core.test.mjs)
+- [A prompt for your next iteration](prompts/mindplay-next-iteration.md)
+
+Preview from the repository root with `python3 -m http.server 4187 --bind 127.0.0.1 --directory assignments/02-mindplay/site`, then open http://127.0.0.1:4187.
+
+The homework repository is private. Public Pages publishing is a separate step; see the assignment README for the deployment options.
+
 ## Where things go
 
 | Folder | Contents |
