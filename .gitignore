@@ -1,0 +1,33 @@
+# macOS and editor files
+.DS_Store
+._*
+*.swp
+*.swo
+.idea/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+*.egg-info/
+
+# JavaScript / TypeScript
+node_modules/
+.next/
+
+# Generated files
+dist/
+build/
+coverage/
+*.log
+tmp/
