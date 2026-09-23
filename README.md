@@ -13,7 +13,9 @@ A workspace for homework, small experiments, and notes while learning agentic wo
 
 Preview with `python3 -m http.server 4190 --bind 127.0.0.1 --directory assignments/03-ink-and-wishes/site`, then open http://127.0.0.1:4190.
 
-The calligraphy website is built locally; GitHub Pages publication remains pending. Preserve the separate Mindplay project when deploying.
+**Public website:** [Ink & Wishes](https://jiayingcc.github.io/AgentHomework/) · [Couplet workshop](https://jiayingcc.github.io/AgentHomework/#couplets).
+
+Published through GitHub Pages. Every push to `main` runs the tests and publishes the website after they pass. See the [deployment record](notes/publishing.md).
 
 ## Earlier project: Mindplay
 
@@ -28,6 +30,8 @@ The calligraphy website is built locally; GitHub Pages publication remains pendi
 Preview from the repository root with `python3 -m http.server 4187 --bind 127.0.0.1 --directory assignments/02-mindplay/site`, then open http://127.0.0.1:4187.
 
 The student has chosen public sharing for this homework. A local preview is not a public link; deployment status must be verified separately.
+
+The earlier project is also available at [Mindplay](https://jiayingcc.github.io/AgentHomework/mindplay/). Its source and original history are preserved.
 
 ## Where things go
 

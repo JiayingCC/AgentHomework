@@ -37,7 +37,7 @@ All agent-created test works were removed through the collection UI. The handoff
 - Forced storage-denial/quota failure and concurrent-tab race testing. Error handling exists, but those browser conditions were not deliberately reproduced in this session.
 - A knowledgeable human's review of the selected stroke model and cultural wording.
 - The planned three-person learner trial and A/B brush comparison.
-- Loading and the complete journey on the eventual public GitHub Pages URL.
+- Broader cross-browser coverage of the public GitHub Pages journey; initial public-origin checks are recorded below.
 
 These are software checks and agent observations, not evidence of educational effectiveness, calligraphy mastery, or participant preference. The earlier 94/100 was a proposal assessment; it should not be presented as a verified implementation grade.
 
@@ -60,3 +60,9 @@ See the [character-library iteration](character-library.md) for the scope assump
 The suite now reports **26 passed, 0 failed**, including six couplet-specific checks. Browser interaction verified independent character ink, undo/redo, all three parts, save/reload/reopen, mismatched-line feedback, confirmation cancellation, custom lines, and both presets. A downloaded PNG was 1800 × 1700 and 68,493 bytes; it contained the three test marks without guides or UI. A single-character save still worked in the same collection. The phone-width check used 390 × 844, with no horizontal overflow. No console errors were observed. Test works were removed after checking.
 
 See [the couplet iteration](couplet-iteration.md) for exact scope, observations, and remaining review needs.
+
+## Public deployment
+
+September 22, 2026: [the public website](https://jiayingcc.github.io/AgentHomework/) was deployed successfully by [GitHub Actions](https://github.com/JiayingCC/AgentHomework/actions/runs/35808817816). All 40 tests across calligraphy and Mindplay passed in CI. Anonymous HTTPS checks returned HTTP 200 and matching source bytes for the homepage, app/couplet modules, glyph data, landscape, and preserved Mindplay homepage. `deployment.json` matched the published source commit.
+
+On the public origin, character data loaded, the couplet route opened, and a brush mark saved in a heading character survived a reload and reopening from the collection. No console errors were observed. The test work was removed afterward. Saved artwork from localhost is separate and is not automatically uploaded or migrated.

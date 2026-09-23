@@ -6,6 +6,8 @@ The student chose the subject and revised the visual brief to **minimal fluid gl
 
 ## Try the website
 
+**Public link:** [Ink & Wishes](https://jiayingcc.github.io/AgentHomework/) · [Spring couplet workshop](https://jiayingcc.github.io/AgentHomework/#couplets). Published to GitHub Pages on September 22, 2026; visitors do not need a GitHub account. [Source repository](https://github.com/JiayingCC/AgentHomework).
+
 From the repository root:
 
 ```sh
@@ -14,7 +16,7 @@ python3 -m http.server 4190 --bind 127.0.0.1 --directory assignments/03-ink-and-
 
 Open [the local studio](http://127.0.0.1:4190/). Keep the terminal running. This address works on your own computer; it is not a public website address. Use an HTTP server rather than opening `index.html` directly because the site uses JavaScript modules and local JSON files.
 
-No build step, framework, API key, account, or package installation is required. Everything needed by the page is in `site/`. Relative asset URLs make it suitable for a GitHub Pages subdirectory. The new calligraphy website has **not yet been published**.
+No build step, framework, API key, account, or package installation is required for the local preview. Everything needed by the page is in `site/`. The public deployment packages these assets using the repository's GitHub Actions workflow. The earlier [Mindplay website](https://jiayingcc.github.io/AgentHomework/mindplay/) remains available separately.
 
 ## What works in this release
 
@@ -71,7 +73,7 @@ The website runs in the browser without live AI calls. “Behind the ink” reco
 
 This release includes six stroke-model lessons and a separate couplet workshop. Couplet guides use a system print font rather than per-character stroke animations. Custom text is checked for matching lengths, not tones or literary parallelism. A searchable dictionary, accounts, cloud syncing, pen tilt, realistic ink diffusion, and aesthetic grading remain outside this build. Compatible pens can provide pressure input to Ink brush, but physical pen testing remains pending. No learner study has compared the brush modes.
 
-Human calligraphy review, physical phone/tablet testing, and a three-classmate learner trial are still pending. The next useful iteration is to collect those observations, correct the highest-impact issue, including a review of the new couplet wording and layout. Publication to GitHub Pages and the student's own reflection remain assignment steps.
+Human calligraphy review, physical phone/tablet testing, and a three-classmate learner trial are still pending. The next useful iteration is to collect those observations and correct the highest-impact issue, including a review of the new couplet wording and layout. The student's own reflection remains an assignment step; GitHub synchronization and public Pages publication are complete.
 
 ## Files and credits
 
