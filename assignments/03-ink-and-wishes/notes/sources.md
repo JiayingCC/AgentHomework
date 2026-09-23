@@ -26,4 +26,4 @@ The UNESCO page intermittently challenged automated access; its official indexed
 
 The project does not claim that all regional teaching standards use an identical model, or that these paths reproduce a historical calligrapher's work. Expert review of the lesson remains pending.
 
-Interface marks, paper texture, envelope layout, and brush rendering are created in code. Typography uses locally available system fonts. No remote media, tracking service, AI endpoint, or externally hosted font is required to use the website.
+Interface marks, paper texture, envelope layout, and brush rendering are created in code. The locally bundled mountain background is AI-generated; the exact prompt and provenance are recorded in [the brush iteration](brush-iteration.md). Typography uses locally available system fonts. No remote media, tracking service, AI endpoint, or externally hosted font is required to use the website.

@@ -1,13 +1,16 @@
 import {clamp,normalizePoint,pointWidth,validateWork,validateStrokes,saveDecision,makePrompt,QUIZ,quizChoice,MAX_POINTS} from './core.mjs';
 import {listWorks,putWork,removeWork} from './storage.mjs';
 import {strokeSVG,paintStrokes,paintArtwork} from './render.mjs';
+import {inkWidth} from './brush.mjs';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const canvas=$('#ink-canvas'),ctx=canvas.getContext('2d'),modal=$('#modal');
-let data,strokes=[],redoStack=[],brushSize=14,brushMode='steady',guide=true,dirty=false,currentId=null,currentName='',works=[];
+let data,strokes=[],redoStack=[],brushSize=28,brushMode='ink',inkLoad=.78,guide=true,dirty=false,currentId=null,currentName='',works=[];
 let drawingRevision=0,modalSession=0;
 let activePointer=null,activeStroke=null,lastPointTime=0,pointCount=0,frame=0,sequence=0,playing=false,timer=null,toastTimer=null,modalReturn=null,collectionGeneration=0;
 const copy=value=>structuredClone(value);
+const settledCanvas=document.createElement('canvas'),settledCtx=settledCanvas.getContext('2d');
+let bakedStrokes=[];
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('#toast').hidden=true;},4200);}
 function stopSequence(){playing=false;clearTimeout(timer);$('#play-symbol').textContent='▶';$('#play-sequence').setAttribute('aria-label','Play stroke sequence');}
 function setRoute(){
@@ -23,43 +26,56 @@ window.addEventListener('hashchange',setRoute);
 function updateDrawingUI(){
   $('#undo').disabled=!strokes.length;$('#redo').disabled=!redoStack.length;
   $('#create-envelope').disabled=!strokes.length;$('#save-practice').disabled=!strokes.length;
+  $('#brush-options span').textContent=brushMode==='ink'?'Ink brush':brushMode==='flow'?'Flow':'Steady';
   $('#paper-hint').style.opacity=strokes.length?'0':'1';
   $('#stroke-count').textContent=strokes.length?`${strokes.length} ${strokes.length===1?'stroke':'strokes'} · ${dirty?'not saved yet':'saved in this browser'}`:'Your first mark is a good beginning.';
 }
 function redraw(){
-  frame=0;ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
-  paintStrokes(ctx,strokes,{x:0,y:0,w:canvas.width,h:canvas.height});
+  frame=0;
+  const complete=activeStroke?strokes.slice(0,-1):strokes;
+  const prefix=bakedStrokes.length<=complete.length&&bakedStrokes.every((s,i)=>s===complete[i]);
+  if(!prefix){settledCtx.clearRect(0,0,settledCanvas.width,settledCanvas.height);bakedStrokes=[];}
+  if(complete.length>bakedStrokes.length){
+    paintStrokes(settledCtx,complete.slice(bakedStrokes.length),{x:0,y:0,w:canvas.width,h:canvas.height});
+    bakedStrokes=complete.slice();
+  }
+  ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(settledCanvas,0,0);
+  if(activeStroke)paintStrokes(ctx,[activeStroke],{x:0,y:0,w:canvas.width,h:canvas.height});
 }
 function scheduleDraw(){if(!frame)frame=requestAnimationFrame(redraw);}
 function resizeCanvas(){
   const box=canvas.getBoundingClientRect();if(!box.width)return;
-  const dpr=Math.min(window.devicePixelRatio||1,3);canvas.width=Math.round(box.width*dpr);canvas.height=Math.round(box.height*dpr);redraw();
+  const dpr=Math.min(window.devicePixelRatio||1,3);canvas.width=Math.round(box.width*dpr);canvas.height=Math.round(box.height*dpr);settledCanvas.width=canvas.width;settledCanvas.height=canvas.height;bakedStrokes=[];redraw();
 }
 new ResizeObserver(resizeCanvas).observe($('#paper'));
 function drawingPoint(event){return normalizePoint(event.clientX,event.clientY,canvas.getBoundingClientRect());}
 function finishStroke(){
-  if(activePointer!==null){try{canvas.releasePointerCapture(activePointer);}catch{}activePointer=null;activeStroke=null;updateDrawingUI();}
+  if(activePointer!==null){const id=activePointer;if(activeStroke?.mode==='ink')activeStroke.finished=true;activePointer=null;activeStroke=null;try{canvas.releasePointerCapture(id);}catch{}scheduleDraw();updateDrawingUI();}
 }
 canvas.addEventListener('pointerdown',event=>{
   if(activePointer!==null||event.button!==0||!event.isPrimary)return;
   if(pointCount>=MAX_POINTS){toast('This page has reached its drawing limit. Save or download it, then start a new page.');return;}
   const p=drawingPoint(event);if(!p)return;
   event.preventDefault();activePointer=event.pointerId;canvas.setPointerCapture(event.pointerId);
-  activeStroke={mode:brushMode,points:[{...p,w:brushSize/1000}]};strokes.push(activeStroke);pointCount++;redoStack=[];dirty=true;drawingRevision++;lastPointTime=event.timeStamp;scheduleDraw();updateDrawingUI();
+  activeStroke={mode:brushMode,points:[{...p,w:brushMode==='ink'?inkWidth(brushSize/1000,0,event.pointerType==='pen'?event.pressure:null):brushSize/1000}]};
+  if(brushMode==='ink'){activeStroke.ink=inkLoad;activeStroke.finished=false;activeStroke.seed=crypto.getRandomValues(new Uint32Array(1))[0];}strokes.push(activeStroke);pointCount++;redoStack=[];dirty=true;drawingRevision++;lastPointTime=event.timeStamp;scheduleDraw();updateDrawingUI();
 });
-canvas.addEventListener('pointermove',event=>{
+function extendStroke(event){
   if(event.pointerId!==activePointer||!activeStroke)return;event.preventDefault();
   const events=event.getCoalescedEvents?.();
   for(const e of events?.length?events:[event]){
     const p=drawingPoint(e);if(!p)continue;const prev=activeStroke.points.at(-1);const distance=Math.hypot(p.x-prev.x,p.y-prev.y);
     if(distance<0.0007)continue;
     if(pointCount>=MAX_POINTS){finishStroke();toast('Drawing limit reached. Save this page before starting another.');break;}
-    const elapsed=Math.max(1,e.timeStamp-lastPointTime);const target=pointWidth(brushSize/1000,distance/elapsed*1000,brushMode);
-    activeStroke.points.push({...p,w:brushMode==='flow'?prev.w*.7+target*.3:target});pointCount++;lastPointTime=e.timeStamp;
+    const elapsed=Math.max(1,e.timeStamp-lastPointTime);const speed=distance/elapsed*1000;const target=brushMode==='ink'?inkWidth(brushSize/1000,speed,e.pointerType==='pen'?e.pressure:null):pointWidth(brushSize/1000,speed,brushMode);
+    activeStroke.points.push({...p,w:brushMode==='steady'?target:prev.w*.6+target*.4});pointCount++;lastPointTime=e.timeStamp;
   }
   scheduleDraw();
-});
-for(const type of ['pointerup','pointercancel','lostpointercapture']) canvas.addEventListener(type,event=>{if(event.pointerId===activePointer)finishStroke();});
+}
+canvas.addEventListener('pointermove',extendStroke);
+canvas.addEventListener('pointerup',event=>{if(event.pointerId===activePointer){extendStroke(event);finishStroke();}});
+for(const type of ['pointercancel','lostpointercapture'])canvas.addEventListener(type,event=>{if(event.pointerId===activePointer)finishStroke();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){finishStroke();stopSequence();}});
 function undo(){finishStroke();if(strokes.length){const s=strokes.pop();redoStack.push(s);pointCount-=s.points.length;dirty=true;drawingRevision++;redraw();updateDrawingUI();}}
 function redo(){finishStroke();if(redoStack.length){const s=redoStack.pop();strokes.push(s);pointCount+=s.points.length;dirty=true;drawingRevision++;redraw();updateDrawingUI();}}
@@ -87,10 +103,31 @@ function newPage(){drawingRevision++;strokes=[];redoStack=[];pointCount=0;dirty=
 $('#new-page').addEventListener('click',()=>{if(strokes.length)confirmAction('Begin again?','This clears the drawing on your desk. Saved works stay in your collection.','Clear this page',newPage);else newPage();});
 
 function showBrush(){
-  openModal('YOUR TOOLS',`<h2 id="modal-title">A brush that feels like you.</h2><div class="brush-preview"><span id="brush-preview-mark"></span></div><label class="range-label" for="brush-size">Brush size <output id="brush-size-output">${brushSize}</output></label><input type="range" id="brush-size" min="5" max="32" value="${brushSize}"><div class="mode-options"><label><input type="radio" name="brush-mode" value="steady" ${brushMode==='steady'?'checked':''}>Steady<small>One consistent width. A simple place to begin.</small></label><label><input type="radio" name="brush-mode" value="flow" ${brushMode==='flow'?'checked':''}>Flow<small>Faster movement makes a thinner mark. An experimental brush.</small></label></div><p class="modal-note">Flow responds to movement speed, not pen pressure. Changing the brush affects your next strokes.</p><div class="modal-actions"><button id="brush-done" class="button button-dark">Back to the paper ↗</button></div>`);
-  const preview=()=>$('#brush-preview-mark').style.height=`${brushSize}px`;preview();
+  openModal('INK & BRISTLE · 笔墨',`<h2 id="modal-title">Find your brush’s rhythm.</h2>
+    <div class="brush-preview"><canvas id="brush-preview-canvas" width="800" height="160" aria-label="Preview of the selected brush and ink load"></canvas></div>
+    <div class="mode-options brush-modes">
+      <label><input type="radio" name="brush-mode" value="ink" ${brushMode==='ink'?'checked':''}>Ink brush <span lang="zh">毛笔</span><small>A soft belly, tapered tips, and fine bristle texture.</small></label>
+      <label><input type="radio" name="brush-mode" value="steady" ${brushMode==='steady'?'checked':''}>Steady<small>A smooth, even line for simple practice.</small></label>
+      <label><input type="radio" name="brush-mode" value="flow" ${brushMode==='flow'?'checked':''}>Flow<small>A smooth line that follows your movement speed.</small></label>
+    </div>
+    <label class="range-label" for="brush-size">Brush size <output id="brush-size-output">${brushSize}</output></label>
+    <input type="range" id="brush-size" min="5" max="60" value="${brushSize}">
+    <div id="ink-load-control"><label class="range-label" for="ink-load">Ink load · 墨量 <output id="ink-load-output">${Math.round(inkLoad*100)}%</output></label>
+    <input type="range" id="ink-load" min="15" max="100" value="${Math.round(inkLoad*100)}"><div class="ink-scale"><span>Dry · 飞白</span><span>Full · 浓墨</span></div></div>
+    <p class="brush-tip" id="brush-tip"></p>
+    <div class="modal-actions"><button id="brush-done" class="button button-dark">Back to the paper ↗</button></div>`);
+  const preview=()=>{
+    const c=$('#brush-preview-canvas'),cx=c.getContext('2d');cx.clearRect(0,0,c.width,c.height);
+    const points=Array.from({length:85},(_,i)=>{const t=i/84;return{x:.08+t*.84,y:.1+Math.sin(t*Math.PI*2)*.024,w:brushMode==='ink'?inkWidth(brushSize/1000,.2+Math.pow(Math.sin(t*Math.PI*2),2)*1.9):pointWidth(brushSize/1000,t*1.8,brushMode)};});
+    paintStrokes(cx,[{mode:brushMode,ink:inkLoad,seed:31,finished:true,points}],{x:0,y:0,w:800,h:800});
+    $('#ink-load-control').hidden=brushMode!=='ink';
+    $('#brush-tip').textContent=brushMode==='ink'?'Move slowly for a fuller mark; move quickly for a fine stroke. Less ink reveals the paper. A compatible pen can also vary width with pressure.':'Your settings apply to the next strokes. Existing marks stay as you made them.';
+    updateDrawingUI();
+  };
   $('#brush-size').oninput=event=>{brushSize=Number(event.target.value);$('#brush-size-output').textContent=String(brushSize);preview();};
-  $$('input[name=brush-mode]').forEach(input=>input.onchange=()=>brushMode=input.value);$('#brush-done').onclick=closeModal;
+  $('#ink-load').oninput=event=>{inkLoad=Number(event.target.value)/100;$('#ink-load-output').textContent=`${Math.round(inkLoad*100)}%`;preview();};
+  $$('input[name=brush-mode]').forEach(input=>input.onchange=()=>{brushMode=input.value;preview();});
+  $('#brush-done').onclick=closeModal;preview();
 }
 $('#brush-options').addEventListener('click',showBrush);
 function setSequence(index){
@@ -112,7 +149,7 @@ function showLesson(){
 }
 $('#open-lesson').onclick=showLesson;
 function showSources(){
-  openModal('REFERENCES & OPEN-SOURCE CREDITS',`<h2 id="modal-title">The ink has a history.</h2><ul class="source-list"><li><a href="https://dict.concised.moe.edu.tw/dictView.jsp?ID=6421&la=0&powerMode=0" target="_blank" rel="noreferrer">Ministry of Education dictionary</a> — pronunciation and meaning of 福.</li><li><a href="https://www.metmuseum.org/essays/chinese-calligraphy" target="_blank" rel="noreferrer">The Metropolitan Museum of Art</a> — calligraphy, brushwork, and expression.</li><li><a href="https://ich.unesco.org/en/RL/spring-festival-social-practices-of-the-chinese-people-in-celebration-of-traditional-new-year-02126" target="_blank" rel="noreferrer">UNESCO</a> — Spring Festival practices.</li><li><a href="https://www.npm.gov.tw/Activity-Content.aspx?l=1&sno=04014430" target="_blank" rel="noreferrer">National Palace Museum</a> — a cultural-learning activity with festive decorations and envelopes.</li><li><a href="https://github.com/chanind/hanzi-writer-data" target="_blank" rel="noreferrer">Hanzi Writer Data 2.0.1</a>, derived from <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noreferrer">Make Me a Hanzi</a> — the unmodified 13-stroke 福 data used consistently in the guide, reference, and quiz.</li></ul><p class="credits-note">Glyph data: Copyright © 1999 Arphic Technology Co., Ltd.; Make Me a Hanzi contributors. Distributed under the Arphic Public License, without warranty. <a href="data/ARPHICPL.TXT" target="_blank" rel="noreferrer">Read the full license</a> · <a href="data/fu.json" download="fu.json">Download the glyph data</a>.</p><p class="modal-note">This is an introductory student prototype. Human calligraphy review and learner testing are still pending. It teaches the selected model; it does not grade the artistic quality of your writing.</p>`);
+  openModal('REFERENCES & OPEN-SOURCE CREDITS',`<h2 id="modal-title">The ink has a history.</h2><ul class="source-list"><li><a href="https://dict.concised.moe.edu.tw/dictView.jsp?ID=6421&la=0&powerMode=0" target="_blank" rel="noreferrer">Ministry of Education dictionary</a> — pronunciation and meaning of 福.</li><li><a href="https://www.metmuseum.org/essays/chinese-calligraphy" target="_blank" rel="noreferrer">The Metropolitan Museum of Art</a> — calligraphy, brushwork, and expression.</li><li><a href="https://ich.unesco.org/en/RL/spring-festival-social-practices-of-the-chinese-people-in-celebration-of-traditional-new-year-02126" target="_blank" rel="noreferrer">UNESCO</a> — Spring Festival practices.</li><li><a href="https://www.npm.gov.tw/Activity-Content.aspx?l=1&sno=04014430" target="_blank" rel="noreferrer">National Palace Museum</a> — a cultural-learning activity with festive decorations and envelopes.</li><li><a href="https://github.com/chanind/hanzi-writer-data" target="_blank" rel="noreferrer">Hanzi Writer Data 2.0.1</a>, derived from <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noreferrer">Make Me a Hanzi</a> — the unmodified 13-stroke 福 data used consistently in the guide, reference, and quiz.</li></ul><p class="credits-note">Landscape background: generated for this project with OpenAI image generation. Glyph data: Copyright © 1999 Arphic Technology Co., Ltd.; Make Me a Hanzi contributors. Distributed under the Arphic Public License, without warranty. <a href="data/ARPHICPL.TXT" target="_blank" rel="noreferrer">Read the full license</a> · <a href="data/fu.json" download="fu.json">Download the glyph data</a>.</p><p class="modal-note">This is an introductory student prototype. Human calligraphy review and learner testing are still pending. It teaches the selected model; it does not grade the artistic quality of your writing.</p>`);
 }
 $('#open-sources').onclick=showSources;$('#footer-sources').onclick=showSources;
 
@@ -168,7 +205,7 @@ async function showSave(kind){
     const name=$('#work-name').value.trim();if(!name){$('#save-error').textContent='Give your work a name first.';$('#work-name').focus();return;}
     const button=$('#commit-save');button.disabled=true;button.textContent='Saving…';$('#save-error').textContent='';
     try{
-      const work={version:1,id:chosenId||crypto.randomUUID(),name,kind,updatedAt:Date.now(),strokes:snapshot,brush:{size:brushSize,mode:brushMode}};
+      const work={version:1,id:chosenId||crypto.randomUUID(),name,kind,updatedAt:Date.now(),strokes:snapshot,brush:{size:brushSize,mode:brushMode,ink:inkLoad}};
       await putWork(work,{replace:confirmedReplace});if(drawingRevision===savedRevision){currentId=work.id;currentName=name;dirty=false;updateDrawingUI();}listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});if(modalSession===saveSession)closeModal();toast('Saved in this browser. Find it in your collection.');
     }catch(error){if(modalSession===saveSession&&$('#save-error')){$('#save-error').textContent=error.message;button.disabled=false;button.textContent=confirmedReplace?'Try replacement again':'Try saving again';}}
   };
@@ -183,7 +220,7 @@ async function renderCollection(){
     let valid=true;try{validateWork(work);paintArtwork(preview,work.strokes,work.kind,{thumbnail:true});}catch{valid=false;meta.textContent='This saved work could not be read. You can remove it to free a slot.';open.disabled=true;dl.disabled=true;}
     open.onclick=()=>{
       if(!valid)return;
-      const apply=()=>{drawingRevision++;strokes=copy(work.strokes);if(work.brush){brushSize=work.brush.size;brushMode=work.brush.mode;}pointCount=strokes.reduce((n,s)=>n+s.points.length,0);redoStack=[];currentId=work.id;currentName=work.name;dirty=false;location.hash='studio';redraw();updateDrawingUI();toast('Opened for editing. Your saved version stays until you replace it.');};
+      const apply=()=>{drawingRevision++;strokes=copy(work.strokes);if(work.brush){brushSize=work.brush.size;brushMode=work.brush.mode;inkLoad=work.brush.ink??.78;}pointCount=strokes.reduce((n,s)=>n+s.points.length,0);redoStack=[];currentId=work.id;currentName=work.name;dirty=false;location.hash='studio';redraw();updateDrawingUI();toast('Opened for editing. Your saved version stays until you replace it.');};
       if(dirty&&strokes.length)confirmAction('Open another piece?','Your unsaved drawing on the desk will be replaced. Saved works stay in your collection.','Open saved work',apply);else apply();
     };
     dl.onclick=()=>download(work.strokes,work.kind,work.name);

@@ -21,7 +21,7 @@ No build step, framework, API key, account, or package installation is required.
 - A short lesson about **福 / fú**, with cultural references and visible credits.
 - A 13-stroke reference you can play, pause, or step through.
 - A three-question “find the next stroke” game with explanations, retries, and first-attempt feedback.
-- A drawing surface with a size slider, optional tracing guide, undo/redo, and clear confirmation. Steady is the default brush; Flow varies width with movement speed.
+- A drawing surface with a size slider, optional tracing guide, undo/redo, and clear confirmation. Ink brush / 毛笔 is the default: tapered strokes, speed-responsive width, bristle texture, and an ink-load control. Steady and Flow remain available.
 - A red-envelope front made from your actual drawing, with a 1200 × 2000 PNG download. A practice sheet downloads at 1200 × 1200.
 - Three named, editable works saved in this browser through IndexedDB. Reopen, replace, download, or remove a work. A full collection requires an explicit replacement choice.
 - “Behind the ink”: the development process, six workflow terms, and an iteration-prompt builder.
@@ -40,30 +40,31 @@ Saved works belong to this browser and origin. Clearing browser data can remove 
 
 ## Homework evidence
 
+- [Latest brush and background iteration](notes/brush-iteration.md)
 - [Design decisions](notes/design.md)
 - [Actual workflow and iterations](notes/workflow.md)
 - [Checks and remaining uncertainties](notes/verification.md)
 - [Sources and glyph provenance](notes/sources.md)
 - [Blank learner-trial worksheet](notes/learner-trial.md)
-- [Automated checks](tests/core.test.mjs)
+- [Automated checks](tests/*.test.mjs)
 
 Run the checks from the repository root with a current Node.js installation:
 
 ```sh
-node --test assignments/03-ink-and-wishes/tests/core.test.mjs
+node --test assignments/03-ink-and-wishes/tests/*.test.mjs
 ```
 
 The website runs in the browser without live AI calls. “Behind the ink” records agent-assisted development; it does not simulate a live team of agents or invent participant feedback.
 
 ## Limits and the next iteration
 
-This first release focuses on one complete journey. Couplets, extra characters, accounts, cloud syncing, real pressure/tilt input, realistic ink diffusion, and aesthetic grading remain outside this build. The Flow brush is experimental; no user study has established that it is better than Steady.
+This first release focuses on one complete journey. Couplets, extra characters, accounts, cloud syncing, pen tilt, realistic ink diffusion, and aesthetic grading remain outside this build. Compatible pens can provide pressure input to Ink brush, but physical pen testing remains pending. No learner study has compared the brush modes.
 
 Human calligraphy review, physical phone/tablet testing, and a three-classmate learner trial are still pending. The next useful iteration is to collect those observations, correct the highest-impact issue, and then add a reviewed Spring Festival couplet layout. Publication to GitHub Pages and the student's own reflection remain assignment steps.
 
 ## Files and credits
 
-`site/app.mjs` connects the interface, `core.mjs` contains validation and quiz rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. `tests/` exercises the core rules.
+`site/brush.mjs` creates the tapered, textured ink marks; `site/app.mjs` connects the interface, `core.mjs` contains validation and quiz rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. `tests/` exercises the core rules.
 
 The unmodified 福 stroke data is from **Hanzi Writer Data 2.0.1 / Make Me a Hanzi**, derived from Arphic fonts. The full Arphic Public License is bundled in `site/data/ARPHICPL.TXT`, and its attribution is visible in the website. The [source record](notes/sources.md) explains which references support which claims. No museum images or proprietary fonts are bundled.
 

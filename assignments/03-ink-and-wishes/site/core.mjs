@@ -1,5 +1,6 @@
 export const MAX_WORKS = 3;
 export const MAX_POINTS = 100000;
+export const BRUSH_MODES = ['steady','flow','ink'];
 export const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
 export function normalizePoint(x, y, rect) {
@@ -13,7 +14,10 @@ export function validateStrokes(strokes) {
   if (!Array.isArray(strokes) || strokes.length > 5000) throw new Error('This drawing has too many strokes.');
   let count = 0;
   for (const stroke of strokes) {
-    if (!stroke || !['steady','flow'].includes(stroke.mode) || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error('The saved drawing is not valid.');
+    if (!stroke || !BRUSH_MODES.includes(stroke.mode) || !Array.isArray(stroke.points) || !stroke.points.length) throw new Error('The saved drawing is not valid.');
+    if(stroke.ink!==undefined&&(!Number.isFinite(stroke.ink)||stroke.ink<.15||stroke.ink>1))throw new Error('The saved ink setting is not valid.');
+    if(stroke.seed!==undefined&&(!Number.isInteger(stroke.seed)||stroke.seed<0||stroke.seed>0xffffffff))throw new Error('The saved brush texture is not valid.');
+    if(stroke.finished!==undefined&&typeof stroke.finished!=='boolean')throw new Error('The saved stroke is not valid.');
     for (const p of stroke.points) {
       count++;
       if (!p || ![p.x,p.y,p.w].every(Number.isFinite) || p.x<0 || p.x>1 || p.y<0 || p.y>1 || p.w<0.0001 || p.w>0.08) throw new Error('The saved drawing contains invalid points.');
@@ -24,7 +28,8 @@ export function validateStrokes(strokes) {
 }
 export function validateWork(work) {
   if (!work || work.version!==1 || typeof work.id!=='string' || !work.id || work.id.length>100 || typeof work.name!=='string' || !work.name.trim() || work.name.length>60 || !['practice','envelope'].includes(work.kind) || !Number.isFinite(work.updatedAt)) throw new Error('This saved work could not be opened.');
-  if(work.brush && (!Number.isFinite(work.brush.size)||work.brush.size<5||work.brush.size>32||!['steady','flow'].includes(work.brush.mode))) throw new Error('The saved brush settings are not valid.');
+  if(work.brush && (!Number.isFinite(work.brush.size)||work.brush.size<5||work.brush.size>60||!BRUSH_MODES.includes(work.brush.mode))) throw new Error('The saved brush settings are not valid.');
+  if(work.brush?.ink!==undefined&&(!Number.isFinite(work.brush.ink)||work.brush.ink<.15||work.brush.ink>1))throw new Error('The saved ink setting is not valid.');
   validateStrokes(work.strokes);
   if (!work.strokes.length) throw new Error('There are no marks in this saved work.');
   return work;

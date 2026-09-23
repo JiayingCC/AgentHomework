@@ -56,3 +56,7 @@ The website's prompt builder helps the student write a task with a goal, context
 - What remained outside this release, and why was that tradeoff useful?
 
 Leave these answers in the student's own voice. Do not turn the agent's test activity into a claimed personal experience or a classmate study.
+
+## Follow-up driven by student feedback
+
+The student asked for a more brush-like writing experience and a slight ink-wash background. The [brush iteration](brush-iteration.md) records the new default, actual renderer changes, generated asset, and checks. This feedback supersedes the earlier Steady default and is separate from the still-pending learner comparison.

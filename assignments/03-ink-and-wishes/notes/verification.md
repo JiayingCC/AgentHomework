@@ -40,3 +40,9 @@ All agent-created test works were removed through the collection UI. The handoff
 - Loading and the complete journey on the eventual public GitHub Pages URL.
 
 These are software checks and agent observations, not evidence of educational effectiveness, calligraphy mastery, or participant preference. The earlier 94/100 was a proposal assessment; it should not be presented as a verified implementation grade.
+
+## Follow-up: brush rendering and landscape
+
+The brush revision adds six focused checks; the full suite now reports **16 passed, 0 failed**. Browser checks exercised wet/dry ink, undo/redo (three → two → three strokes), save/reload/reopen, and a 1200 × 2000 PNG export (117,642 bytes). The exported file was visually inspected: dry texture and solid ink appeared on the red background without the guide or landscape. The saved brush size 60 and ink load 15% reappeared on reopening. The settings dialog fit a 390 × 844 viewport, and the browser reported no console errors. Test artwork was removed afterward.
+
+Pressure response is covered by width-function tests, not a physical-pen trial. The new texture is deterministic and old Steady/Flow work remains readable. The [iteration record](brush-iteration.md) includes the generated background's prompt and the visual correction made during this pass.

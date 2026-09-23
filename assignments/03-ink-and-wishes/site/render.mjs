@@ -1,3 +1,4 @@
+import {paintInk} from './brush.mjs';
 export const INK = '#202323';
 export function strokeSVG(data,{active=-1,before=13,ghost=true,label='Reference for 福'}={}) {
   const paths=data.strokes.map((d,i)=>{
@@ -9,6 +10,7 @@ export function strokeSVG(data,{active=-1,before=13,ghost=true,label='Reference 
 export function paintStrokes(ctx,strokes,box) {
   ctx.save();ctx.translate(box.x,box.y);ctx.scale(box.w,box.h);ctx.fillStyle=INK;ctx.strokeStyle=INK;ctx.lineCap='round';ctx.lineJoin='round';
   for(const stroke of strokes){
+    if(stroke.mode==='ink'){paintInk(ctx,stroke);continue;}
     const ps=stroke.points;if(!ps.length)continue;
     ctx.beginPath();ctx.arc(ps[0].x,ps[0].y,ps[0].w/2,0,Math.PI*2);ctx.fill();
     for(let i=1;i<ps.length;i++){
