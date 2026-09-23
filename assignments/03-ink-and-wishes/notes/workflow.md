@@ -70,3 +70,9 @@ The student then asked “对联呢”. The [couplet iteration](couplet-iteratio
 The student reported that the site was confusing for non-native speakers and that the red-envelope interaction needed to feel more interesting and intimate. They requested a new branch and research-informed ideas. The agent created `design/personal-learning-experience`, inspected the published studio and the envelope source, and reviewed official pages from Duolingo, HelloChinese, Brilliant, and Slowly.
 
 The [redesign proposal](personal-learning-redesign.md) recommends a guided character-to-gift journey, visible English meanings, pronunciation support, and an envelope that the learner can personalize, fold, seal, and preview opening. It records the research links, a bounded first prototype, and checks for a later implementation. This step changes documentation only; the redesign and the proposed learner trial have not been performed.
+
+### Revision after the plan review
+
+The student asked the agent to grade the plan and offer more suggestions. The review scored the first proposal 78/100, identifying delayed brush interaction, an unclear learning check, superficial personalization, an unfinished recipient experience, and excess first-build scope. The student then requested that the plan be fixed.
+
+Revision 2 makes the first brush interaction immediate, moves the optional dedication after practice, defines a meaning-recall check, and limits the first prototype to one guided lesson and one envelope interaction. It gives cross-device receiving and handwriting replay a second milestone, makes the 安/山 entry-lesson choice an exploratory learner check, and preserves the original rubric for a later review. The proposal includes a blank observation table and a concrete record of this feedback-to-revision cycle. Implementation, physical-device checks, and learner observations remain pending.
