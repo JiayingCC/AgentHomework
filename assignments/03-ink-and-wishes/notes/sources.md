@@ -12,7 +12,7 @@ Checked September 22, 2026. The website includes a Sources & credits dialog and 
 
 The UNESCO page intermittently challenged automated access; its official indexed content was available. The museum page initially returned a fetch error; the official indexed page confirmed the specific activity. These are source-access limits, not invented verification.
 
-## Bundled asset provenance
+## Original 福 asset provenance
 
 - Asset: unmodified `福.json`, saved locally as `site/data/fu.json`.
 - Pinned package: `hanzi-writer-data@2.0.1`.
@@ -27,3 +27,18 @@ The UNESCO page intermittently challenged automated access; its official indexed
 The project does not claim that all regional teaching standards use an identical model, or that these paths reproduce a historical calligrapher's work. Expert review of the lesson remains pending.
 
 Interface marks, paper texture, envelope layout, and brush rendering are created in code. The locally bundled mountain background is AI-generated; the exact prompt and provenance are recorded in [the brush iteration](brush-iteration.md). Typography uses locally available system fonts. No remote media, tracking service, AI endpoint, or externally hosted font is required to use the website.
+
+## Six-character expansion
+
+The expanded library also uses these Ministry of Education entries, checked September 22, 2026:
+
+| Entry | Lesson use |
+| --- | --- |
+| [山](https://dict.concised.moe.edu.tw/dictView.jsp?ID=34392&la=0&powerMode=0) | shān; mountain. |
+| [水](https://dict.revised.moe.edu.tw/dictView.jsp?ID=9163&la=0&powerMode=0) | shuǐ; water. |
+| [永](https://dict.concised.moe.edu.tw/dictView.jsp?ID=45045&la=0&powerMode=0) | yǒng; lasting, with 永久 and 永遠 as examples. |
+| [安](https://dict.concised.moe.edu.tw/dictView.jsp?ID=39684&la=0&powerMode=0) | ān; calm or safety, including 安心. |
+| [春](https://dict.concised.moe.edu.tw/dictView.jsp?ID=32885&la=0&powerMode=0) | chūn; spring. The separate UNESCO source supports the Spring Festival connection. |
+| [山水](https://dict.concised.moe.edu.tw/dictView.jsp?ID=34440&la=0&powerMode=0) | Landscape and landscape painting, used for the 山/水 cultural connection. |
+
+`shan.json`, `shui.json`, `yong.json`, `an.json`, and `chun.json` are downloaded unchanged from the same pinned `hanzi-writer-data@2.0.1` package. Their selected models contain 3, 4, 5, 6, and 9 strokes respectively. [The manifest](../site/data/manifest.json) records each model's ID, character, count, package version, and checksum; filenames are the ID plus `.json`. The full bundled Arphic license and attribution apply to all six character assets. Step captions and short lesson explanations are project-authored; human review remains pending.

@@ -46,3 +46,11 @@ These are software checks and agent observations, not evidence of educational ef
 The brush revision adds six focused checks; the full suite now reports **16 passed, 0 failed**. Browser checks exercised wet/dry ink, undo/redo (three → two → three strokes), save/reload/reopen, and a 1200 × 2000 PNG export (117,642 bytes). The exported file was visually inspected: dry texture and solid ink appeared on the red background without the guide or landscape. The saved brush size 60 and ink load 15% reappeared on reopening. The settings dialog fit a 390 × 844 viewport, and the browser reported no console errors. Test artwork was removed afterward.
 
 Pressure response is covered by width-function tests, not a physical-pen trial. The new texture is deterministic and old Steady/Flow work remains readable. The [iteration record](brush-iteration.md) includes the generated background's prompt and the visual correction made during this pass.
+
+## Follow-up: six-character library
+
+The full suite now reports **20 passed, 0 failed**. Added checks cover all six character assets and caption counts, dynamic quiz choices, malformed glyph rejection, and both current and older saved-work metadata.
+
+Browser checks confirmed correct guide/reference counts for 山 (3), 水 (4), 永 (5), 安 (6), 春 (9), and 福 (13). 山 playback reached 3/3 and stopped. Its two-question quiz accepted a corrected answer without inflating the first-attempt result (1/2). Switching characters preserved strokes and undo/redo history. A named 山 practice survived reload, displayed 山 in its collection card, and reopened the correct lesson with its stroke intact. Its culture story showed the matching meaning and source links. The six choices fit a 390 × 844 viewport without horizontal overflow. No console errors were reported during this flow.
+
+See the [character-library iteration](character-library.md) for the scope assumption and remaining review needs.

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "shan",
+    "character": "山",
+    "strokeCount": 3,
+    "package": "hanzi-writer-data@2.0.1",
+    "sha256": "c1e58c4b20cba28ae9778dfb280a93dc18fdccd3ecbec00bece20ce739c9f459"
+  },
+  {
+    "id": "shui",
+    "character": "水",
+    "strokeCount": 4,
+    "package": "hanzi-writer-data@2.0.1",
+    "sha256": "46e262a80f2b7da72ea04788d1c19c40339e18beaba16987cc84d55fc257c9e3"
+  },
+  {
+    "id": "yong",
+    "character": "永",
+    "strokeCount": 5,
+    "package": "hanzi-writer-data@2.0.1",
+    "sha256": "009b7fd5b2fc186a0cdaa314fb4f88fe768c3c3ee4e98681ff8ff109c8c160cd"
+  },
+  {
+    "id": "an",
+    "character": "安",
+    "strokeCount": 6,
+    "package": "hanzi-writer-data@2.0.1",
+    "sha256": "654830c5bfda6086c1ee48536ef8fe89f0c56112152dba149801f023c9627295"
+  },
+  {
+    "id": "chun",
+    "character": "春",
+    "strokeCount": 9,
+    "package": "hanzi-writer-data@2.0.1",
+    "sha256": "7361a998c0e3ff79799c803caa9a3c11173d063ab0206338d8c1b06116c118d8"
+  },
+  {
+    "id": "fu",
+    "character": "福",
+    "strokeCount": 13,
+    "package": "hanzi-writer-data@2.0.1",
+    "sha256": "9a9e493fd53758afd5919ca0a037d87e078bfa912066c4e3dc090f94b2dc6992"
+  }
+]

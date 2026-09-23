@@ -1,3 +1,4 @@
+import {getLesson,DEFAULT_LESSON,makeQuiz} from './lessons.mjs';
 export const MAX_WORKS = 3;
 export const MAX_POINTS = 100000;
 export const BRUSH_MODES = ['steady','flow','ink'];
@@ -28,6 +29,7 @@ export function validateStrokes(strokes) {
 }
 export function validateWork(work) {
   if (!work || work.version!==1 || typeof work.id!=='string' || !work.id || work.id.length>100 || typeof work.name!=='string' || !work.name.trim() || work.name.length>60 || !['practice','envelope'].includes(work.kind) || !Number.isFinite(work.updatedAt)) throw new Error('This saved work could not be opened.');
+  if(work.lesson!==undefined&&!getLesson(work.lesson))throw new Error('The character for this saved work is not supported.');
   if(work.brush && (!Number.isFinite(work.brush.size)||work.brush.size<5||work.brush.size>60||!BRUSH_MODES.includes(work.brush.mode))) throw new Error('The saved brush settings are not valid.');
   if(work.brush?.ink!==undefined&&(!Number.isFinite(work.brush.ink)||work.brush.ink<.15||work.brush.ink>1))throw new Error('The saved ink setting is not valid.');
   validateStrokes(work.strokes);
@@ -42,12 +44,8 @@ export function makePrompt(goal) {
   if (!clean) throw new Error('Describe one thing you would improve first.');
   return `Improve Ink & Wishes. My goal: ${clean}\n\nFirst inspect the relevant code and explain the current behavior. Propose one small change, preserving existing drawings and the Mindplay project. Implement the change, run checks that would catch the original problem, and show a working preview. Report what you tested, what remains uncertain, and one decision I should review. Do not invent participant feedback or claim a cultural expert reviewed the result.`;
 }
-export const QUIZ = [
-  {target:0,options:[4,0,8],hint:'The first stroke is the small mark at the upper left, above the left-hand component.'},
-  {target:4,options:[11,6,4],hint:'After the four strokes on the left, move to the upper horizontal stroke on the right.'},
-  {target:8,options:[8,10,11],hint:'Now begin the lower-right box with its left edge. The inside strokes come later.'}
-];
-export function quizChoice(question, choice) {
-  if (!Number.isInteger(question)||!QUIZ[question]||!Number.isInteger(choice)||choice<0||choice>2) throw new Error('Invalid quiz choice.');
-  return QUIZ[question].options[choice]===QUIZ[question].target;
+export const QUIZ = makeQuiz(getLesson(DEFAULT_LESSON));
+export function quizChoice(question, choice,quiz=QUIZ) {
+  if (!Number.isInteger(question)||!quiz[question]||!Number.isInteger(choice)||choice<0||choice>=quiz[question].options.length) throw new Error('Invalid quiz choice.');
+  return quiz[question].options[choice]===quiz[question].target;
 }

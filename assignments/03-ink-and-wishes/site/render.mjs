@@ -1,6 +1,6 @@
 import {paintInk} from './brush.mjs';
 export const INK = '#202323';
-export function strokeSVG(data,{active=-1,before=13,ghost=true,label='Reference for 福'}={}) {
+export function strokeSVG(data,{active=-1,before=data.strokes.length,ghost=true,label='Character reference'}={}) {
   const paths=data.strokes.map((d,i)=>{
     const color=i===active?'#202323':i<before?'#899191':ghost?'#e5e8e8':'none';
     return `<path d="${d}" fill="${color}"/>`;

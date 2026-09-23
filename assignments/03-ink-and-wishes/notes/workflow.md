@@ -60,3 +60,5 @@ Leave these answers in the student's own voice. Do not turn the agent's test act
 ## Follow-up driven by student feedback
 
 The student asked for a more brush-like writing experience and a slight ink-wash background. The [brush iteration](brush-iteration.md) records the new default, actual renderer changes, generated asset, and checks. This feedback supersedes the earlier Steady default and is separate from the still-pending learner comparison.
+
+The next comment pointed out that the page had only 福. The agent treated this as a request to broaden the library and proceeded with a stated six-character assumption while an optional selection question remained unanswered. The [character-library iteration](character-library.md) records the scope, data sources, draft preservation, save compatibility, and actual checks. This is another concrete feedback → implementation → verification cycle; it is not evidence of a completed learner study.

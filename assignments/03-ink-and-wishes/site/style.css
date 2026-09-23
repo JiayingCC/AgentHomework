@@ -25,3 +25,17 @@ dialog{border:1px solid #fff;border-radius:26px;background:linear-gradient(150de
 .ink-scale{display:flex;justify-content:space-between;color:#7e8585;font-size:10px;margin-top:4px}
 .brush-tip{font-size:11px;margin:22px 0 0;line-height:1.8}
 @media(max-width:600px){.ambient:before{background-size:auto 76vh;background-position:left bottom;opacity:.2}.brush-modes{grid-template-columns:1fr 1fr}.brush-modes label:first-child{grid-column:1/-1}.brush-modes label:first-child small{margin-top:7px}.brush-preview{height:80px;margin:18px 0}.brush-tip{font-size:11px}}
+
+/* One connected lesson per character; the familiar writing desk stays in place. */
+.character-library{display:flex;align-items:center;gap:28px;margin:0 0 12px}
+.library-label{width:205px;flex:none}.library-label .eyebrow{margin:0 0 7px;font-size:8px;letter-spacing:1.6px}.library-label>span{font-size:10px;color:#747b7b}
+.character-picker{display:grid;grid-template-columns:repeat(6,1fr);padding:5px;gap:4px;border-radius:19px;flex:1}
+.character-choice{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 8px;border-radius:14px;text-align:left;min-height:58px}
+.character-choice>span:first-child{font-family:"Songti SC","STSong","SimSun",serif;font-size:29px;line-height:1}
+.character-choice>span:last-child{font-size:10px}.character-choice small{display:block;font-size:8px;color:#8b9292;margin-top:5px;white-space:nowrap}
+.character-choice[aria-pressed=true]{background:#fff;box-shadow:0 2px 8px #2023230c}.character-choice:hover{background:#ffffffa6}
+.character-status{font-size:10px;color:#7a8181;text-align:right;margin:0 0 24px;line-height:1.5;min-height:15px}
+.quiz-options{grid-template-columns:repeat(var(--choices,3),1fr)}
+@media(max-width:1100px){.library-label{width:175px}.character-library{gap:25px}.character-choice{gap:6px;padding:10px 5px}.character-choice>span:first-child{font-size:25px}}
+@media(max-width:850px){.character-library{display:block}.library-label{width:auto;display:flex;justify-content:space-between;margin-bottom:10px}.library-label .eyebrow{margin:0}.character-status{text-align:left;margin-bottom:28px}.character-choice{padding:10px 6px}}
+@media(max-width:600px){.character-picker{grid-template-columns:repeat(3,1fr);border-radius:18px;gap:3px}.character-choice{min-height:54px;gap:12px}.character-choice>span:first-child{font-size:27px}.character-status{font-size:9px}.library-label>span{font-size:9px}.character-library{margin-top:-6px}.library-label .eyebrow{font-size:7px;letter-spacing:1.1px}.character-status{margin-bottom:23px}}

@@ -1,12 +1,15 @@
-import {clamp,normalizePoint,pointWidth,validateWork,validateStrokes,saveDecision,makePrompt,QUIZ,quizChoice,MAX_POINTS} from './core.mjs';
+import {clamp,normalizePoint,pointWidth,validateWork,validateStrokes,saveDecision,makePrompt,quizChoice,MAX_POINTS} from './core.mjs';
 import {listWorks,putWork,removeWork} from './storage.mjs';
 import {strokeSVG,paintStrokes,paintArtwork} from './render.mjs';
 import {inkWidth} from './brush.mjs';
+import {LESSONS,DEFAULT_LESSON,getLesson,makeQuiz,checkGlyph} from './lessons.mjs';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const canvas=$('#ink-canvas'),ctx=canvas.getContext('2d'),modal=$('#modal');
 let data,strokes=[],redoStack=[],brushSize=28,brushMode='ink',inkLoad=.78,guide=true,dirty=false,currentId=null,currentName='',works=[];
 let drawingRevision=0,modalSession=0;
+let lesson=getLesson(DEFAULT_LESSON),lessonRequest=0;
+const drafts=new Map(),glyphCache=new Map();
 let activePointer=null,activeStroke=null,lastPointTime=0,pointCount=0,frame=0,sequence=0,playing=false,timer=null,toastTimer=null,modalReturn=null,collectionGeneration=0;
 const copy=value=>structuredClone(value);
 const settledCanvas=document.createElement('canvas'),settledCtx=settledCanvas.getContext('2d');
@@ -84,7 +87,7 @@ document.addEventListener('keydown',event=>{
   if(modal.open||$('#view-studio').hidden||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return;
   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();event.shiftKey?redo():undo();}
 });
-window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+window.addEventListener('beforeunload',event=>{if((dirty&&strokes.length)||[...drafts.values()].some(d=>d.dirty&&d.strokes.length)){event.preventDefault();event.returnValue='';}});
 $('#toggle-guide').addEventListener('click',()=>{guide=!guide;$('#toggle-guide').setAttribute('aria-pressed',String(guide));$('#guide-grid').hidden=!guide;$('#trace-guide').hidden=!guide;});
 $('#appearance').addEventListener('click',()=>{const solid=document.body.classList.toggle('solid');$('#appearance').setAttribute('aria-pressed',String(solid));$('#appearance').setAttribute('aria-label',solid?'Use glass controls':'Use solid controls');try{localStorage.setItem('ink-wishes-solid',String(solid));}catch{}});
 try{if(localStorage.getItem('ink-wishes-solid')==='true'){$('#appearance').click();}}catch{}
@@ -132,43 +135,43 @@ function showBrush(){
 $('#brush-options').addEventListener('click',showBrush);
 function setSequence(index){
   if(!data)return;sequence=(index+data.strokes.length)%data.strokes.length;
-  $('#sequence-glyph').innerHTML=strokeSVG(data,{active:sequence,before:sequence,label:`Stroke ${sequence+1} of 13`});
-  $('#sequence-glyph').setAttribute('aria-label',`Stroke ${sequence+1} of 13`);$('#sequence-counter').textContent=`${sequence+1} / 13`;
-  const captions={0:'Begin with the small upper-left mark.',4:'Move to the upper horizontal on the right.',8:'Begin the lower-right box.',12:'Close the lower box with this final stroke.'};
-  $('#sequence-caption').textContent=captions[sequence]||`Notice where stroke ${sequence+1} sits beside the earlier marks.`;
+  $('#sequence-glyph').innerHTML=strokeSVG(data,{active:sequence,before:sequence,label:`${lesson.char}: stroke ${sequence+1} of ${lesson.count}`});
+  $('#sequence-glyph').setAttribute('aria-label',`${lesson.char}: stroke ${sequence+1} of ${lesson.count}`);$('#sequence-counter').textContent=`${sequence+1} / ${lesson.count}`;
+  $('#sequence-caption').textContent=lesson.captions[sequence];
   $$('#sequence-dots button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===sequence)));
 }
 $('#previous-stroke').onclick=()=>{stopSequence();setSequence(sequence-1);};$('#next-stroke').onclick=()=>{stopSequence();setSequence(sequence+1);};
 $('#play-sequence').onclick=()=>{
   if(!data)return;if(playing){stopSequence();return;}playing=true;$('#play-symbol').textContent='Ⅱ';$('#play-sequence').setAttribute('aria-label','Pause stroke sequence');setSequence(0);
-  const next=()=>{if(!playing)return;if(sequence===12){stopSequence();return;}setSequence(sequence+1);timer=setTimeout(next,950);};timer=setTimeout(next,950);
+  const next=()=>{if(!playing)return;if(sequence===lesson.count-1){stopSequence();return;}setSequence(sequence+1);timer=setTimeout(next,950);};timer=setTimeout(next,950);
 };
 function showLesson(){
-  openModal('ONE CHARACTER, MANY WISHES',`<h2 id="modal-title">The meaning of 福.</h2><div class="lesson-feature"><div class="lesson-glyph">${data?strokeSVG(data):'福'}</div><div><p class="pinyin">fú</p><p>Good fortune · happiness · blessing</p></div></div><h3>Something worth wishing for</h3><p>福 brings together ideas of good fortune and well-being. Here, it becomes a personal wish: your own writing, given a place on a red-envelope design.</p><h3>A little context</h3><p>Spring Festival traditions include exchanging greetings and wishes for the year ahead. Creative activities with festive inscriptions and red envelopes can be a way to explore that culture. Families and communities celebrate in different ways.</p><h3>Start with a model. Make it your own.</h3><p>This lesson uses a 13-stroke standard-character model. Watch the sequence, notice the spaces between the strokes, and then try it yourself. The digital brush introduces mark-making; it does not reproduce every quality of a physical brush.</p><ul class="source-list"><li><a href="https://dict.concised.moe.edu.tw/dictView.jsp?ID=6421&la=0&powerMode=0" target="_blank" rel="noreferrer">Ministry of Education: 福, pronunciation and meaning ↗</a></li><li><a href="https://ich.unesco.org/en/RL/spring-festival-social-practices-of-the-chinese-people-in-celebration-of-traditional-new-year-02126" target="_blank" rel="noreferrer">UNESCO: Spring Festival practices ↗</a></li><li><a href="https://www.npm.gov.tw/Activity-Content.aspx?l=1&sno=04014430" target="_blank" rel="noreferrer">National Palace Museum: festive making ↗</a></li></ul><div class="modal-actions"><button id="lesson-practice" class="button button-dark">Try it on the paper ↗</button></div>`);
+  openModal('A CHARACTER TO EXPLORE',`<h2 id="modal-title">The meaning of ${lesson.char}.</h2><div class="lesson-feature"><div class="lesson-glyph">${data?strokeSVG(data,{label:lesson.char}):lesson.char}</div><div><p class="pinyin">${lesson.pinyin}</p><p>${lesson.meaning}</p></div></div><h3>A little context</h3><p>${lesson.context}</p><h3>Try this on the paper</h3><p>${lesson.practice}</p><p>This lesson uses a ${lesson.count}-stroke standard-character model. Watch the sequence, notice the spaces, and try it yourself. The digital brush introduces mark-making; it does not reproduce every quality of a physical brush.</p><ul class="source-list"><li><a href="${lesson.source}" target="_blank" rel="noreferrer">Ministry of Education: ${lesson.char}, pronunciation and meaning ↗</a></li><li><a href="${lesson.connection.url}" target="_blank" rel="noreferrer">${lesson.connection.title} ↗</a></li></ul><div class="modal-actions"><button id="lesson-practice" class="button button-dark">Try it on the paper ↗</button></div>`);
   $('#lesson-practice').onclick=()=>{closeModal();location.hash='studio';};
 }
 $('#open-lesson').onclick=showLesson;
 function showSources(){
-  openModal('REFERENCES & OPEN-SOURCE CREDITS',`<h2 id="modal-title">The ink has a history.</h2><ul class="source-list"><li><a href="https://dict.concised.moe.edu.tw/dictView.jsp?ID=6421&la=0&powerMode=0" target="_blank" rel="noreferrer">Ministry of Education dictionary</a> — pronunciation and meaning of 福.</li><li><a href="https://www.metmuseum.org/essays/chinese-calligraphy" target="_blank" rel="noreferrer">The Metropolitan Museum of Art</a> — calligraphy, brushwork, and expression.</li><li><a href="https://ich.unesco.org/en/RL/spring-festival-social-practices-of-the-chinese-people-in-celebration-of-traditional-new-year-02126" target="_blank" rel="noreferrer">UNESCO</a> — Spring Festival practices.</li><li><a href="https://www.npm.gov.tw/Activity-Content.aspx?l=1&sno=04014430" target="_blank" rel="noreferrer">National Palace Museum</a> — a cultural-learning activity with festive decorations and envelopes.</li><li><a href="https://github.com/chanind/hanzi-writer-data" target="_blank" rel="noreferrer">Hanzi Writer Data 2.0.1</a>, derived from <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noreferrer">Make Me a Hanzi</a> — the unmodified 13-stroke 福 data used consistently in the guide, reference, and quiz.</li></ul><p class="credits-note">Landscape background: generated for this project with OpenAI image generation. Glyph data: Copyright © 1999 Arphic Technology Co., Ltd.; Make Me a Hanzi contributors. Distributed under the Arphic Public License, without warranty. <a href="data/ARPHICPL.TXT" target="_blank" rel="noreferrer">Read the full license</a> · <a href="data/fu.json" download="fu.json">Download the glyph data</a>.</p><p class="modal-note">This is an introductory student prototype. Human calligraphy review and learner testing are still pending. It teaches the selected model; it does not grade the artistic quality of your writing.</p>`);
+  openModal('REFERENCES & OPEN-SOURCE CREDITS',`<h2 id="modal-title">The ink has a history.</h2><ul class="source-list">${LESSONS.map(l=>`<li><a href="${l.source}" target="_blank" rel="noreferrer">Ministry of Education: ${l.char} / ${l.pinyin}</a> — pronunciation and meaning.</li>`).join('')}<li><a href="https://www.metmuseum.org/essays/chinese-calligraphy" target="_blank" rel="noreferrer">The Metropolitan Museum of Art</a> — calligraphy, brushwork, and expression.</li><li><a href="https://ich.unesco.org/en/RL/spring-festival-social-practices-of-the-chinese-people-in-celebration-of-traditional-new-year-02126" target="_blank" rel="noreferrer">UNESCO</a> — Spring Festival practices.</li><li><a href="https://www.npm.gov.tw/Activity-Content.aspx?l=1&sno=04014430" target="_blank" rel="noreferrer">National Palace Museum</a> — a cultural-learning activity with festive decorations and envelopes.</li><li><a href="https://github.com/chanind/hanzi-writer-data" target="_blank" rel="noreferrer">Hanzi Writer Data 2.0.1</a>, derived from <a href="https://github.com/skishore/makemeahanzi" target="_blank" rel="noreferrer">Make Me a Hanzi</a> — the unmodified data for all six characters, used consistently in each guide, reference, and quiz.</li></ul><p class="credits-note">Landscape background: generated for this project with OpenAI image generation. Glyph data: Copyright © 1999 Arphic Technology Co., Ltd.; Make Me a Hanzi contributors. Distributed under the Arphic Public License, without warranty. <a href="data/ARPHICPL.TXT" target="_blank" rel="noreferrer">Read the full license</a> · <a href="data/${lesson.id}.json" download="${lesson.id}.json">Download ${lesson.char} glyph data</a>.</p><p class="modal-note">This is an introductory student prototype. Human calligraphy review and learner testing are still pending. It teaches the selected model; it does not grade the artistic quality of your writing.</p>`);
 }
 $('#open-sources').onclick=showSources;$('#footer-sources').onclick=showSources;
 
 function startQuiz(){
   if(!data){toast('The stroke reference is still loading. Please try again.');return;}
+  const quiz=makeQuiz(lesson);
   let question=0,firstCorrect=0,attempted=false;
   function showQuestion(){
-    const q=QUIZ[question];attempted=false;
-    openModal('A THREE-QUESTION WARM-UP',`<div class="quiz-progress" aria-label="Question ${question+1} of 3">${QUIZ.map((_,i)=>`<i class="${i<question?'done':''}"></i>`).join('')}</div><h2 id="modal-title">Which stroke comes next?</h2><p>${q.target===0?'Start at the beginning. Find the first mark.':`You have ${q.target} strokes. Find stroke ${q.target+1}.`}</p><div class="quiz-glyph">${strokeSVG(data,{before:q.target,ghost:false,label:'Strokes already written'})}</div><div class="quiz-options">${q.options.map((index,i)=>`<button class="quiz-option" data-choice="${i}" aria-label="Option ${'ABC'[i]}">${strokeSVG(data,{active:index,before:q.target,ghost:true,label:`Option ${'ABC'[i]}: highlighted next stroke`})}<span>Option ${'ABC'[i]}</span></button>`).join('')}</div><div class="quiz-feedback" role="status" id="quiz-feedback">Choose the next stroke from the three highlighted options.</div><div class="modal-actions"><button class="text-link" id="quiz-skip">Go straight to practice ↗</button><button class="button button-dark" id="quiz-next" disabled>${question===2?'Finish warm-up':'Next question'} ↗</button></div>`);
+    const q=quiz[question];attempted=false;
+    openModal(`${lesson.char} · A ${quiz.length}-QUESTION WARM-UP`,`<div class="quiz-progress" aria-label="Question ${question+1} of ${quiz.length}">${quiz.map((_,i)=>`<i class="${i<question?'done':''}"></i>`).join('')}</div><h2 id="modal-title">Which stroke comes next?</h2><p>${q.target===0?'Start at the beginning. Find the first mark.':`You have ${q.target} ${q.target===1?'stroke':'strokes'}. Find stroke ${q.target+1}.`}</p><div class="quiz-glyph">${strokeSVG(data,{before:q.target,ghost:false,label:'Strokes already written'})}</div><div class="quiz-options" style="--choices:${q.options.length}">${q.options.map((index,i)=>`<button class="quiz-option" data-choice="${i}" aria-label="Option ${'ABC'[i]}">${strokeSVG(data,{active:index,before:q.target,ghost:true,label:`Option ${'ABC'[i]}: highlighted next stroke`})}<span>Option ${'ABC'[i]}</span></button>`).join('')}</div><div class="quiz-feedback" role="status" id="quiz-feedback">Choose the next stroke from the highlighted options.</div><div class="modal-actions"><button class="text-link" id="quiz-skip">Go straight to practice ↗</button><button class="button button-dark" id="quiz-next" disabled>${question===quiz.length-1?'Finish warm-up':'Next question'} ↗</button></div>`);
     $$('.quiz-option').forEach(button=>button.onclick=()=>{
-      const choice=Number(button.dataset.choice),correct=quizChoice(question,choice);
+      const choice=Number(button.dataset.choice),correct=quizChoice(question,choice,quiz);
       if(!attempted&&correct)firstCorrect++;attempted=true;
       if(correct){button.classList.add('correct');$$('.quiz-option').forEach(b=>b.disabled=true);$('#quiz-feedback').innerHTML=`<strong>That’s the next stroke.</strong><p>${q.hint}</p>`;$('#quiz-next').disabled=false;}
       else{button.classList.add('incorrect');button.disabled=true;const letter='ABC'[q.options.indexOf(q.target)];$('#quiz-feedback').innerHTML=`<strong>Take another look. The reference uses option ${letter}.</strong><p>${q.hint} Choose that stroke to continue.</p>`;}
     });
     $('#quiz-skip').onclick=()=>{closeModal();location.hash='studio';};
-    $('#quiz-next').onclick=()=>{if(question<2){question++;showQuestion();}else finishQuiz();};
+    $('#quiz-next').onclick=()=>{if(question<quiz.length-1){question++;showQuestion();}else finishQuiz();};
   }
-  function finishQuiz(){openModal('WARM-UP COMPLETE',`<div class="quiz-complete"><div class="completion-mark" aria-hidden="true">✧</div><h2 id="modal-title">Now, make your mark.</h2><p>You recognized ${firstCorrect} of 3 strokes on the first try. Every explanation is another chance to learn.</p><p class="modal-note">This checks the selected sequence, not your artistic ability.</p><button class="button button-dark" id="quiz-practice">Back to the paper ↗</button></div>`);$('#quiz-practice').onclick=()=>{closeModal();location.hash='studio';};}
+  function finishQuiz(){openModal('WARM-UP COMPLETE',`<div class="quiz-complete"><div class="completion-mark" aria-hidden="true">✧</div><h2 id="modal-title">Now, make your mark.</h2><p>You recognized ${firstCorrect} of ${quiz.length} strokes on the first try. Every explanation is another chance to learn.</p><p class="modal-note">This checks the selected sequence, not your artistic ability.</p><button class="button button-dark" id="quiz-practice">Back to the paper ↗</button></div>`);$('#quiz-practice').onclick=()=>{closeModal();location.hash='studio';};}
   showQuestion();
 }
 $('#open-quiz').onclick=startQuiz;
@@ -185,7 +188,7 @@ function showEnvelope(){
 }
 $('#create-envelope').onclick=showEnvelope;$('#save-practice').onclick=()=>showSave('practice');
 async function showSave(kind){
-  if(!strokes.length)return;finishStroke();const snapshot=copy(strokes),savedRevision=drawingRevision;
+  if(!strokes.length)return;finishStroke();const snapshot=copy(strokes),savedRevision=drawingRevision,savedLesson=lesson.id;
   openModal('KEEP YOUR MARKS',`<h2 id="modal-title">Give this piece a name.</h2><label class="form-label" for="work-name">Work name</label><input id="work-name" type="text" maxlength="60" placeholder="A wish for a friend" autocomplete="off"><p class="modal-note">Saved in this browser, on this device. Up to three editable works.</p><div id="save-slots"></div><p id="save-error" class="modal-error" role="alert"></p><div class="save-actions"><button class="button button-light" id="save-download">Download instead ↓</button><button class="button button-dark" id="commit-save" disabled>Loading collection…</button></div>`);
   const saveSession=modalSession;
   $('#work-name').value=currentName;$('#save-download').onclick=()=>download(snapshot,kind,$('#work-name').value||'my-wish');
@@ -205,7 +208,7 @@ async function showSave(kind){
     const name=$('#work-name').value.trim();if(!name){$('#save-error').textContent='Give your work a name first.';$('#work-name').focus();return;}
     const button=$('#commit-save');button.disabled=true;button.textContent='Saving…';$('#save-error').textContent='';
     try{
-      const work={version:1,id:chosenId||crypto.randomUUID(),name,kind,updatedAt:Date.now(),strokes:snapshot,brush:{size:brushSize,mode:brushMode,ink:inkLoad}};
+      const work={version:1,id:chosenId||crypto.randomUUID(),name,kind,lesson:savedLesson,updatedAt:Date.now(),strokes:snapshot,brush:{size:brushSize,mode:brushMode,ink:inkLoad}};
       await putWork(work,{replace:confirmedReplace});if(drawingRevision===savedRevision){currentId=work.id;currentName=name;dirty=false;updateDrawingUI();}listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});if(modalSession===saveSession)closeModal();toast('Saved in this browser. Find it in your collection.');
     }catch(error){if(modalSession===saveSession&&$('#save-error')){$('#save-error').textContent=error.message;button.disabled=false;button.textContent=confirmedReplace?'Try replacement again':'Try saving again';}}
   };
@@ -215,16 +218,17 @@ async function renderCollection(){
   try{works=await listWorks();}catch(error){if(generation!==collectionGeneration)return;$('#collection-status').textContent=error.message;return;}
   if(generation!==collectionGeneration)return;$('#collection-status').textContent='';$('#nav-count').textContent=String(works.length);
   for(const work of works){
-    const card=document.createElement('article');card.className='collection-card';const art=document.createElement('div');art.className='collection-art';const preview=document.createElement('canvas');preview.setAttribute('aria-label',`Preview of ${work.name}`);art.append(preview);const title=document.createElement('h2');title.textContent=work.name;const meta=document.createElement('p');meta.textContent=`${work.kind==='envelope'?'Red-envelope design':'Practice sheet'} · ${new Date(work.updatedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
+    const card=document.createElement('article');card.className='collection-card';const art=document.createElement('div');art.className='collection-art';const preview=document.createElement('canvas');preview.setAttribute('aria-label',`Preview of ${work.name}`);art.append(preview);const title=document.createElement('h2');title.textContent=work.name;const meta=document.createElement('p');meta.textContent=`${getLesson(work.lesson??DEFAULT_LESSON)?.char??''} · ${work.kind==='envelope'?'Red-envelope design':'Practice sheet'} · ${new Date(work.updatedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
     const actions=document.createElement('div');actions.className='collection-actions';const open=document.createElement('button'),dl=document.createElement('button'),remove=document.createElement('button');for(const b of [open,dl,remove])b.className='text-link';open.textContent='Open & edit ↗';dl.textContent='PNG ↓';remove.textContent='Remove';remove.setAttribute('aria-label',`Remove ${work.name}`);
     let valid=true;try{validateWork(work);paintArtwork(preview,work.strokes,work.kind,{thumbnail:true});}catch{valid=false;meta.textContent='This saved work could not be read. You can remove it to free a slot.';open.disabled=true;dl.disabled=true;}
     open.onclick=()=>{
       if(!valid)return;
-      const apply=()=>{drawingRevision++;strokes=copy(work.strokes);if(work.brush){brushSize=work.brush.size;brushMode=work.brush.mode;inkLoad=work.brush.ink??.78;}pointCount=strokes.reduce((n,s)=>n+s.points.length,0);redoStack=[];currentId=work.id;currentName=work.name;dirty=false;location.hash='studio';redraw();updateDrawingUI();toast('Opened for editing. Your saved version stays until you replace it.');};
-      if(dirty&&strokes.length)confirmAction('Open another piece?','Your unsaved drawing on the desk will be replaced. Saved works stay in your collection.','Open saved work',apply);else apply();
+      const apply=async()=>{if(await chooseLesson(work.lesson??DEFAULT_LESSON,{work})){location.hash='studio';toast('Opened for editing. Your saved version stays until you replace it.');}};
+      const target=drafts.get(work.lesson??DEFAULT_LESSON);
+      if(((work.lesson??DEFAULT_LESSON)===lesson.id&&dirty&&strokes.length)||(target?.dirty&&target.strokes.length))confirmAction('Open this saved piece?','This opens the saved version on its character’s desk. Any unsaved draft for that character will be replaced.','Open saved work',apply);else apply();
     };
     dl.onclick=()=>download(work.strokes,work.kind,work.name);
-    remove.onclick=()=>confirmAction('Remove this saved work?',`“${work.name}” will be removed from this browser’s collection. Download a copy first if you want to keep it.`,'Remove saved work',async()=>{try{await removeWork(work.id);if(currentId===work.id){currentId=null;dirty=!!strokes.length;updateDrawingUI();}renderCollection();toast('Removed from this collection.');}catch(error){toast(error.message);}});
+    remove.onclick=()=>confirmAction('Remove this saved work?',`“${work.name}” will be removed from this browser’s collection. Download a copy first if you want to keep it.`,'Remove saved work',async()=>{try{await removeWork(work.id);if(currentId===work.id){currentId=null;dirty=!!strokes.length;updateDrawingUI();}for(const draft of drafts.values()){if(draft.currentId===work.id){draft.currentId=null;draft.dirty=!!draft.strokes.length;}}renderCollection();toast('Removed from this collection.');}catch(error){toast(error.message);}});
     actions.append(open,dl,remove);card.append(art,title,meta,actions);$('#collection-grid').append(card);
   }
   for(let i=works.length;i<3;i++){
@@ -234,16 +238,49 @@ async function renderCollection(){
 $('#generate-prompt').onclick=()=>{try{$('#generated-prompt').value=makePrompt($('#iteration-goal').value);$('#prompt-result').hidden=false;$('#prompt-status').textContent='';}catch(error){$('#prompt-status').textContent=error.message;$('#iteration-goal').focus();}};
 $('#copy-prompt').onclick=async()=>{try{await navigator.clipboard.writeText($('#generated-prompt').value);$('#prompt-status').textContent='Prompt copied. Paste it into your coding agent.';}catch{$('#generated-prompt').focus();$('#generated-prompt').select();$('#prompt-status').textContent='Copy is unavailable here. Your prompt is selected so you can copy it manually.';}};
 
-async function boot(){
-  setRoute();updateDrawingUI();
-  listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});
+function rememberDraft(){
+  drafts.set(lesson.id,copy({strokes,redoStack,dirty,currentId,currentName,brushSize,brushMode,inkLoad}));
+}
+function applyDraft(draft){
+  ({strokes,redoStack,dirty,currentId,currentName,brushSize,brushMode,inkLoad}=draft);
+  pointCount=strokes.reduce((n,s)=>n+s.points.length,0);drawingRevision++;bakedStrokes=[];
+  settledCtx.clearRect(0,0,settledCanvas.width,settledCanvas.height);redraw();updateDrawingUI();
+}
+function updateLessonUI(){
+  $('#lesson-pinyin').textContent=lesson.pinyin;$('#lesson-meaning').textContent=lesson.meaning;
+  $('#lesson-gloss').textContent=lesson.gloss;$('#paper-character').textContent=`PRACTISING · ${lesson.char}`;
+  $('#open-lesson').textContent=`The story of ${lesson.char} ↗`;
+  $('#open-quiz small').textContent=`A ${makeQuiz(lesson).length}-question warm-up`;
+  $('#trace-guide').innerHTML=strokeSVG(data,{label:lesson.char});$$('.fu-small').forEach(el=>el.innerHTML=strokeSVG(data,{label:lesson.char}));
+  $$('#character-picker button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lesson===lesson.id)));
+  $('#sequence-dots').replaceChildren();data.strokes.forEach((_,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',`Show stroke ${i+1}`);b.onclick=()=>{stopSequence();setSequence(i);};$('#sequence-dots').append(b);});
+  for(const selector of ['#open-quiz','#play-sequence','#previous-stroke','#next-stroke','#toggle-guide'])$(selector).disabled=false;
+  $('#guide-grid').hidden=!guide;$('#trace-guide').hidden=!guide;setSequence(0);
+}
+async function chooseLesson(id,{work=null,initial=false}={}){
+  const next=getLesson(id);if(!next)return false;
+  const request=++lessonRequest;stopSequence();
+  $('#character-status').textContent=`Opening ${next.char}…`;$('#character-picker').setAttribute('aria-busy','true');
   try{
-    const response=await fetch('./data/fu.json');if(!response.ok)throw new Error();data=await response.json();
-    if(data.strokes?.length!==13||data.medians?.length!==13||data.strokes.some(s=>typeof s!=='string'||!/^[MLCQZHVSAmlcqzhvsa0-9.,\s-]+$/.test(s)))throw new Error();
-    $('#trace-guide').innerHTML=strokeSVG(data);$$('.fu-small').forEach(el=>el.innerHTML=strokeSVG(data));
-    $('#sequence-dots').replaceChildren();data.strokes.forEach((_,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',`Show stroke ${i+1}`);b.onclick=()=>{stopSequence();setSequence(i);};$('#sequence-dots').append(b);});setSequence(0);
+    let glyph=glyphCache.get(id);
+    if(!glyph){const response=await fetch(`./data/${id}.json`);if(!response.ok)throw new Error();glyph=checkGlyph(await response.json(),next);glyphCache.set(id,glyph);}
+    if(request!==lessonRequest)return false;
+    if(work)validateWork(work);
+    finishStroke();if(!initial||strokes.length||redoStack.length)rememberDraft();
+    let draft=drafts.get(id);
+    if(work)draft={strokes:copy(work.strokes),redoStack:[],dirty:false,currentId:work.id,currentName:work.name,brushSize:work.brush?.size??28,brushMode:work.brush?.mode??'ink',inkLoad:work.brush?.ink??.78};
+    if(!draft)draft={strokes:[],redoStack:[],dirty:false,currentId:null,currentName:'',brushSize,brushMode,inkLoad};
+    lesson=next;data=glyph;drafts.delete(id);applyDraft(copy(draft));updateLessonUI();
+    $('#character-status').textContent=`${next.char} · ${next.count} strokes. Drafts stay while you switch; save to keep them after a reload.`;
+    return true;
   }catch{
-    data=null;$('#sequence-caption').textContent='The reference could not load. Refresh to try again; you can still draw freely.';$('#open-quiz').disabled=true;$('#play-sequence').disabled=true;$('#previous-stroke').disabled=true;$('#next-stroke').disabled=true;$('#toggle-guide').disabled=true;$('#guide-grid').hidden=true;toast('The stroke reference is unavailable. Freehand drawing still works.');
-  }
+    if(request===lessonRequest){$('#character-status').textContent=`Could not open ${next.char}. Your current drawing is still here. Select the character to try again.`;if(!data){$('#sequence-caption').textContent='The reference is unavailable. You can still draw freely.';for(const selector of ['#open-quiz','#play-sequence','#previous-stroke','#next-stroke'])$(selector).disabled=true;}}
+    return false;
+  }finally{if(request===lessonRequest)$('#character-picker').setAttribute('aria-busy','false');}
+}
+async function boot(){
+  LESSONS.forEach(l=>{const b=document.createElement('button');b.className='character-choice';b.dataset.lesson=l.id;b.setAttribute('aria-label',`${l.char} · ${l.pinyin} · ${l.meaning}`);b.setAttribute('aria-pressed',String(l.id===lesson.id));b.innerHTML=`<span lang="zh">${l.char}</span><span>${l.pinyin}<small>${l.count} strokes</small></span>`;b.onclick=()=>chooseLesson(l.id);$('#character-picker').append(b);});
+  setRoute();updateDrawingUI();listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});
+  await chooseLesson(DEFAULT_LESSON,{initial:true});
 }
 boot();
