@@ -64,3 +64,9 @@ The student asked for a more brush-like writing experience and a slight ink-wash
 The next comment pointed out that the page had only 福. The agent treated this as a request to broaden the library and proceeded with a stated six-character assumption while an optional selection question remained unanswered. The [character-library iteration](character-library.md) records the scope, data sources, draft preservation, save compatibility, and actual checks. This is another concrete feedback → implementation → verification cycle; it is not evidence of a completed learner study.
 
 The student then asked “对联呢”. The [couplet iteration](couplet-iteration.md) adds a dedicated workshop with example/custom text, individual character handwriting, a red-paper composition, editable saved pieces, and PNG export. This supersedes the earlier deferral of couplets. The implementation reused the brush and collection while keeping the new draft separate from single-character work; checks included a real save/reload and an inspected download.
+
+## September 23: a branch for a more personal beginner experience
+
+The student reported that the site was confusing for non-native speakers and that the red-envelope interaction needed to feel more interesting and intimate. They requested a new branch and research-informed ideas. The agent created `design/personal-learning-experience`, inspected the published studio and the envelope source, and reviewed official pages from Duolingo, HelloChinese, Brilliant, and Slowly.
+
+The [redesign proposal](personal-learning-redesign.md) recommends a guided character-to-gift journey, visible English meanings, pronunciation support, and an envelope that the learner can personalize, fold, seal, and preview opening. It records the research links, a bounded first prototype, and checks for a later implementation. This step changes documentation only; the redesign and the proposed learner trial have not been performed.
