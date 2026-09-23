@@ -55,7 +55,7 @@ export function saveDecision(existing, id) {
 export function makePrompt(goal) {
   const clean = String(goal??'').trim();
   if (!clean) throw new Error('Describe one thing you would improve first.');
-  return `Improve Ink & Wishes. My goal: ${clean}\n\nFirst inspect the relevant code and explain the current behavior. Propose one small change, preserving existing drawings and the Mindplay project. Implement the change, run checks that would catch the original problem, and show a working preview. Report what you tested, what remains uncertain, and one decision I should review. Do not invent participant feedback or claim a cultural expert reviewed the result.`;
+  return `Improve Ink & Wishes. My goal: ${clean}\n\nFirst inspect the relevant code and explain the current behavior. Propose one small change, preserving existing drawings and the Ink & Wishes learning experience. Implement the change, run checks that would catch the original problem, and show a working preview. Report what you tested, what remains uncertain, and one decision I should review. Do not invent participant feedback or claim a cultural expert reviewed the result.`;
 }
 export const QUIZ = makeQuiz(getLesson(DEFAULT_LESSON));
 export function quizChoice(question, choice,quiz=QUIZ) {

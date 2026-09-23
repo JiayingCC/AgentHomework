@@ -1,85 +1,101 @@
-# AgentHomework
+# Ink & Wishes — 墨与愿
 
-A workspace for homework, small experiments, and notes while learning agentic workflows.
+**Learn a character. Practise with ink. Create a wish in your own handwriting.**
 
-## Current project: Ink & Wishes — 墨与愿
+Ink & Wishes is an interactive Chinese calligraphy website for beginners. It brings together character lessons, stroke-order games, a textured digital brush, and creative activities inspired by Chinese culture. Visitors can practise individual characters, design a red envelope, or write a complete Spring Festival couplet.
 
-[Ink & Wishes](assignments/03-ink-and-wishes/README.md) is an interactive calligraphy studio with six character lessons (山、水、永、安、春、福), stroke-order games, an ink brush, a couplet workshop, a red-envelope creator, and three editable browser-local save slots. Its visual direction is minimal fluid glass with a neutral palette and a faint ink-wash landscape.
+Built as an **agentic-workflow homework project**, it documents how a student directed an AI coding agent through research, prototyping, feedback, testing, and publication. The goal is to explore an idea through iteration and understand the workflow behind the result.
 
-- [Website source](assignments/03-ink-and-wishes/site/)
-- [Actual workflow and fixes](assignments/03-ink-and-wishes/notes/workflow.md)
-- [Verification and limitations](assignments/03-ink-and-wishes/notes/verification.md)
-- [Sources and asset license](assignments/03-ink-and-wishes/notes/sources.md)
+**[Open the website](https://jiayingcc.github.io/AgentHomework/)** · **[Write a spring couplet](https://jiayingcc.github.io/AgentHomework/#couplets)** · **[Explore the AI workflow](https://jiayingcc.github.io/AgentHomework/#process)**
 
-Preview with `python3 -m http.server 4190 --bind 127.0.0.1 --directory assignments/03-ink-and-wishes/site`, then open http://127.0.0.1:4190.
+## What you can do
 
-**Public website:** [Ink & Wishes](https://jiayingcc.github.io/AgentHomework/) · [Couplet workshop](https://jiayingcc.github.io/AgentHomework/#couplets).
-
-Published through GitHub Pages. Every push to `main` runs the tests and publishes the website after they pass. See the [deployment record](notes/publishing.md).
-
-## Earlier project: Mindplay
-
-[Mindplay](assignments/02-mindplay/README.md) is a psychology-learning playground with three mini-games, a knowledge garden, and an interactive guide to agent workflows. It uses pastel gradients, textured glass, and an original illustrated mind mascot.
-
-- [Website source](assignments/02-mindplay/site/)
-- [Actual agent-workflow record](notes/mindplay-workflow.md)
-- [Research and sources](notes/psychology-research.md)
-- [Tests](assignments/02-mindplay/tests/core.test.mjs)
-- [A prompt for your next iteration](prompts/mindplay-next-iteration.md)
-
-Preview from the repository root with `python3 -m http.server 4187 --bind 127.0.0.1 --directory assignments/02-mindplay/site`, then open http://127.0.0.1:4187.
-
-The student has chosen public sharing for this homework. A local preview is not a public link; deployment status must be verified separately.
-
-The earlier project is also available at [Mindplay](https://jiayingcc.github.io/AgentHomework/mindplay/). Its source and original history are preserved.
-
-## Where things go
-
-| Folder | Contents |
+| Experience | What it includes |
 | --- | --- |
-| `assignments/` | One folder per assignment, such as `01-first-workflow/` |
-| `experiments/` | Small prototypes and comparisons |
-| `notes/` | Reading notes, decisions, and lessons learned |
-| `prompts/` | Reusable prompts with their purpose and expected output |
-| `templates/` | Starting points for assignments and experiment logs |
+| **Learn six characters** | 山 (mountain), 水 (water), 永 (lasting), 安 (peace), 春 (spring), and 福 (good fortune), with pronunciation, meaning, cultural context, and references. |
+| **Follow stroke order** | Play, pause, or step through a character's stroke sequence, then try a short next-stroke game with explanations and retries. |
+| **Write with a digital brush** | Tapered strokes, bristle texture, speed-responsive width, adjustable brush size and ink load, optional tracing guides, undo, and redo. |
+| **Create Spring Festival couplets** | Choose a five- or seven-character example, or enter your own 上联 (upper line), 下联 (lower line), and 横批 (heading). Write each character separately and preview the assembled red-paper design. |
+| **Make a red-envelope design** | Turn your handwritten practice into a digital red-envelope front. |
+| **Save and export** | Keep up to three editable works in your browser, reopen them to continue, or download a PNG to share. |
+| **Understand the development process** | Explore the “Behind the ink” page, learn six workflow terms, and build a prompt for your next AI-assisted iteration. |
 
-`AGENTS.md` gives coding agents guidance for this repository. No programming language or agent framework is required yet; add dependencies inside the assignment or experiment that needs them.
+The visual style combines a **minimal neutral palette, translucent glass controls, white writing paper, and a subtle ink-wash landscape**. Red is used for the couplet and envelope paper.
 
-## Start an assignment
+## A quick first visit
 
-From the repository root:
+1. Choose a character in **The studio**. Open its story and watch the stroke reference.
+2. Try **Find the next stroke**, then practise on the writing surface.
+3. Adjust the brush and ink load, or turn the guide off to write freely.
+4. Choose **Make it a wish** for a red envelope, or open **Couplets · 春联** to write a larger composition.
+5. Save your work in **Your collection**, or download an image.
 
-```sh
-mkdir -p assignments/01-first-workflow
-cp templates/assignment.md assignments/01-first-workflow/README.md
-git switch -c homework/01-first-workflow
+Couplets use a clearly labeled traditional arrangement: when facing the doorway, the upper line is on the right, the lower line is on the left, and the heading reads from right to left. Custom lines must have equal lengths of 2–9 Chinese characters; headings accept 2–6. Unwritten spaces stay blank in the exported image.
+
+| PNG export | Size |
+| --- | --- |
+| Practice sheet | 1200 × 1200 pixels |
+| Red-envelope front | 1200 × 2000 pixels |
+| Complete couplet composition | 1800 × 1700 pixels |
+
+## The AI-assisted workflow
+
+The student chose the subject, visual direction, and priorities. One coding agent carried out research, implementation, testing, and deployment, with student feedback guiding the next changes.
+
+```mermaid
+flowchart LR
+    A[Student brief] --> B[Research and plan]
+    B --> C[Build a prototype]
+    C --> D[Test and inspect]
+    D --> E[Student feedback]
+    E --> C
+    E --> F[Publish and reflect]
 ```
 
-Fill in the assignment brief and success criteria before implementing. Keep its code, small sample inputs, and final write-up in the same assignment folder.
+The first working version connected a single 福 lesson to a saved keepsake. Later feedback led to a more expressive brush, the ink-wash background, six connected character lessons, and the couplet workshop. The repository records actual changes, source checks, and verification results so the process can be discussed as part of the assignment.
 
-## A workflow to practice
+The website runs entirely in the browser. Its workflow guide explains AI-assisted development, and its prompt builder generates text to use with a coding agent; it does not call an AI service.
 
-1. Write the goal, constraints, and a concrete way to check the result.
-2. Ask an agent to propose a short plan and identify missing information.
-3. Implement one small step at a time and inspect the changes.
-4. Run the relevant checks and record the actual results.
-5. Note what worked, what failed, and what you would change next time.
+- [Development workflow and review/fix examples](assignments/03-ink-and-wishes/notes/workflow.md)
+- [Brush and background iteration](assignments/03-ink-and-wishes/notes/brush-iteration.md)
+- [Character-library iteration](assignments/03-ink-and-wishes/notes/character-library.md)
+- [Couplet-workshop iteration](assignments/03-ink-and-wishes/notes/couplet-iteration.md)
+- [Verification record](assignments/03-ink-and-wishes/notes/verification.md)
 
-Use `templates/experiment.md` to compare prompts, tools, or approaches. Keep API keys in a local `.env` file; `.gitignore` excludes it. Commit only non-secret placeholder values in `.env.example` if needed.
+## Technology and local preview
 
-## Save progress
+The site uses HTML, CSS, JavaScript modules, Canvas 2D for handwriting, and IndexedDB for editable works. There is no framework, package installation, API key, or account required to use the website.
 
-```sh
-git status
-git diff
-git add assignments/01-first-workflow
-git commit -m "Add first workflow assignment"
-```
-
-Once GitHub is connected and Git authentication is configured, publish the branch with:
+From the repository root, with Python 3 installed:
 
 ```sh
-git push -u origin homework/01-first-workflow
+python3 -m http.server 4190 --bind 127.0.0.1 --directory assignments/03-ink-and-wishes/site
 ```
 
-Review the diff before merging. Follow each course's rules for AI assistance and record assistance when required.
+Open [the local preview](http://127.0.0.1:4190/). Use the HTTP server instead of opening the HTML file directly, because the app loads JavaScript modules and local character data.
+
+With Node.js 22 or later, run the **26 automated checks**:
+
+```sh
+node --test assignments/03-ink-and-wishes/tests/*.test.mjs
+```
+
+GitHub Actions runs these checks, builds the website, and deploys to GitHub Pages after updates are pushed to `main`. See the [publishing guide](notes/publishing.md) and [deployment workflow](.github/workflows/pages.yml).
+
+## Project files
+
+| Location | Contents |
+| --- | --- |
+| [`assignments/03-ink-and-wishes/site/`](assignments/03-ink-and-wishes/site/) | Website interface, brush renderer, lessons, couplet editor, storage, and bundled assets |
+| [`assignments/03-ink-and-wishes/tests/`](assignments/03-ink-and-wishes/tests/) | Checks for brush behavior, validation, quizzes, saved works, and couplet layout/export |
+| [`assignments/03-ink-and-wishes/notes/`](assignments/03-ink-and-wishes/notes/) | Design decisions, sources, iteration records, verification, and a learner-trial worksheet |
+| [`scripts/build-pages.mjs`](scripts/build-pages.mjs) | Packages the website assets for publication |
+| [`.github/workflows/pages.yml`](.github/workflows/pages.yml) | Automated testing and deployment |
+
+## Scope, storage, and credits
+
+This is a learning prototype. The single-character lessons use bundled stroke models; couplet tracing guides use a local system print font. The app does not grade handwriting quality, validate poetic tone patterns, or reproduce every property of a physical brush. Human calligraphy review, physical pen/touch testing, and the planned classmate trial remain future work.
+
+Saved works are stored in the current browser and website origin. They are not uploaded to a server or synced across devices. Clearing browser data can remove them, and localhost works do not automatically transfer to the public site. PNG downloads are image copies, not editable drawings.
+
+Character stroke data comes from **Hanzi Writer Data 2.0.1 / Make Me a Hanzi**, derived from Arphic fonts, with the full [Arphic Public License](assignments/03-ink-and-wishes/site/data/ARPHICPL.TXT) included. The ink-wash background was generated for the project. Cultural references, asset provenance, and content limits are documented in [Sources & credits](assignments/03-ink-and-wishes/notes/sources.md).

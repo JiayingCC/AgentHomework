@@ -63,6 +63,10 @@ See [the couplet iteration](couplet-iteration.md) for exact scope, observations,
 
 ## Public deployment
 
-September 22, 2026: [the public website](https://jiayingcc.github.io/AgentHomework/) was deployed successfully by [GitHub Actions](https://github.com/JiayingCC/AgentHomework/actions/runs/35808817816). All 40 tests across calligraphy and Mindplay passed in CI. Anonymous HTTPS checks returned HTTP 200 and matching source bytes for the homepage, app/couplet modules, glyph data, landscape, and preserved Mindplay homepage. `deployment.json` matched the published source commit.
+September 22, 2026: [the public website](https://jiayingcc.github.io/AgentHomework/) was deployed successfully by [GitHub Actions](https://github.com/JiayingCC/AgentHomework/actions/runs/35808817816). The calligraphy test suite passed in CI. Anonymous HTTPS checks returned HTTP 200 and matching source bytes for the homepage, app/couplet modules, glyph data, and landscape. `deployment.json` matched the published source commit.
 
 On the public origin, character data loaded, the couplet route opened, and a brush mark saved in a heading character survived a reload and reopening from the collection. No console errors were observed. The test work was removed afterward. Saved artwork from localhost is separate and is not automatically uploaded or migrated.
+
+## Repository focus and documentation — September 23, 2026
+
+The repository description, README, development notes, prompt builder, and publishing configuration now focus on Ink & Wishes. The release build packages only this website. All **26 Ink & Wishes tests passed** locally after the update; README file links resolved, the deployment bundle matched the website source, and removed project assets were absent from the bundle.

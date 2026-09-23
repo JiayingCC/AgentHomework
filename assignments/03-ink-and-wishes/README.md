@@ -16,7 +16,7 @@ python3 -m http.server 4190 --bind 127.0.0.1 --directory assignments/03-ink-and-
 
 Open [the local studio](http://127.0.0.1:4190/). Keep the terminal running. This address works on your own computer; it is not a public website address. Use an HTTP server rather than opening `index.html` directly because the site uses JavaScript modules and local JSON files.
 
-No build step, framework, API key, account, or package installation is required for the local preview. Everything needed by the page is in `site/`. The public deployment packages these assets using the repository's GitHub Actions workflow. The earlier [Mindplay website](https://jiayingcc.github.io/AgentHomework/mindplay/) remains available separately.
+No build step, framework, API key, account, or package installation is required for the local preview. Everything needed by the page is in `site/`. The public deployment packages these assets using the repository's GitHub Actions workflow.
 
 ## What works in this release
 
@@ -80,5 +80,3 @@ Human calligraphy review, physical phone/tablet testing, and a three-classmate l
 `site/brush.mjs` creates the tapered, textured ink marks; `site/app.mjs` connects the interface, `lessons.mjs` holds the six lessons and generates their quizzes, `core.mjs` contains validation rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. `couplet-model.mjs` defines text validation and page layout; `couplets.mjs` connects the separate writing desk. The test suite contains 26 checks.
 
 The six unmodified character datasets are from **Hanzi Writer Data 2.0.1 / Make Me a Hanzi**, derived from Arphic fonts. The full Arphic Public License is bundled in `site/data/ARPHICPL.TXT`, and its attribution is visible in the website. `site/data/manifest.json` records each asset's checksum. The [source record](notes/sources.md) explains which references support which claims. No museum images or proprietary fonts are bundled.
-
-Mindplay remains separately in `assignments/02-mindplay/`.

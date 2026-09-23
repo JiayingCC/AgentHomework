@@ -16,7 +16,7 @@ One coding agent performed the research, implementation, and checks in this buil
 
 | Stage | Context and action | Reviewable output |
 | --- | --- | --- |
-| Scope | Read the brief and preserve the existing psychology project. | A separate `03-ink-and-wishes` assignment. |
+| Scope | Read the calligraphy brief and define a small, testable learning journey. | A separate `03-ink-and-wishes` assignment. |
 | Research | Check primary cultural sources and the character-data reuse terms. | A source record and bundled licensed glyph. |
 | Design | Compare a landing-page approach with a writing desk. | Paper-centered layout, neutral palette, floating glass controls. |
 | Build | Implement learning → game → drawing → envelope → collection → export. | Static website with no external runtime dependency. |
@@ -44,7 +44,7 @@ The proposal referenced an education-ministry character model but had not resolv
 
 ## A bounded prompt for the next iteration
 
-> Inspect Ink & Wishes and its verification notes. Observe three classmates using the existing journey before adding features; do not invent observations. Based on the recorded difficulty, propose one small change and a check that would detect the original problem. Preserve saved-drawing compatibility and the separate Mindplay project. Show the result and report what remains uncertain.
+> Inspect Ink & Wishes and its verification notes. Observe three classmates using the existing journey before adding features; do not invent observations. Based on the recorded difficulty, propose one small change and a check that would detect the original problem. Preserve saved-drawing compatibility and the existing calligraphy lessons. Show the result and report what remains uncertain.
 
 The website's prompt builder helps the student write a task with a goal, context, constraints, and checks. It generates text to copy into an agent; it does not execute that task itself.
 

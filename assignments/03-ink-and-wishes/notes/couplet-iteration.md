@@ -2,7 +2,7 @@
 
 September 22, 2026. Student feedback: “对联呢” (What about couplets?).
 
-The first build deferred couplets. This follow-up adds them as a separate, working path while retaining the six-character studio and the earlier Mindplay project.
+The first build deferred couplets. This follow-up adds them as a separate, working path while retaining the six-character studio.
 
 ## The experience
 
