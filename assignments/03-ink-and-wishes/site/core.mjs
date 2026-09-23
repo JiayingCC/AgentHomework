@@ -1,5 +1,6 @@
 import {getLesson,DEFAULT_LESSON,makeQuiz} from './lessons.mjs';
 import {validateCoupletText,coupletSlots} from './couplet-model.mjs';
+import {validateDedication} from './journey-model.mjs';
 export const MAX_WORKS = 3;
 export const MAX_POINTS = 100000;
 export const BRUSH_MODES = ['steady','flow','ink'];
@@ -29,7 +30,9 @@ export function validateStrokes(strokes) {
   return strokes;
 }
 export function validateWork(work) {
-  if (!work || work.version!==1 || typeof work.id!=='string' || !work.id || work.id.length>100 || typeof work.name!=='string' || !work.name.trim() || work.name.length>60 || !['practice','envelope','couplet'].includes(work.kind) || !Number.isFinite(work.updatedAt)) throw new Error('This saved work could not be opened.');
+  if (!work || work.version!==1 || typeof work.id!=='string' || !work.id || work.id.length>100 || typeof work.name!=='string' || !work.name.trim() || work.name.length>60 || !['practice','envelope','couplet','keepsake'].includes(work.kind) || !Number.isFinite(work.updatedAt)) throw new Error('This saved work could not be opened.');
+  if(work.dedication!==undefined)validateDedication(work.dedication);
+  if(work.kind==='keepsake'&&!getLesson(work.lesson))throw new Error('The keepsake character could not be read.');
   if(work.lesson!==undefined&&!getLesson(work.lesson))throw new Error('The character for this saved work is not supported.');
   if(work.brush && (!Number.isFinite(work.brush.size)||work.brush.size<5||work.brush.size>60||!BRUSH_MODES.includes(work.brush.mode))) throw new Error('The saved brush settings are not valid.');
   if(work.brush?.ink!==undefined&&(!Number.isFinite(work.brush.ink)||work.brush.ink<.15||work.brush.ink>1))throw new Error('The saved ink setting is not valid.');

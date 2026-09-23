@@ -3,7 +3,7 @@ export const COUPLET_PRESETS = [
   {id:'blessings',title:'福满门 · Blessings at the door',upper:'天增岁月人增寿',lower:'春满乾坤福满门',heading:'福满人间',meaning:'May the passing years bring long life, and spring bring blessings to your home.',source:'https://www.ndrc.gov.cn/fzggw/jgsj/ltj/sjdt/202301/t20230117_1346733.html'}
 ];
 export const PARTS = ['upper','lower','heading'];
-export const PART_LABELS = {upper:'上联 · Upper line',lower:'下联 · Lower line',heading:'横批 · Heading'};
+export const PART_LABELS = {upper:'Right strip · 上联',lower:'Left strip · 下联',heading:'Top banner · 横批'};
 export const PLACEMENT_SOURCE = 'https://www.zhongyuan.gov.cn/hlwpy/9901488.jhtml';
 export function validateCoupletText(value){
   if(!value||typeof value!=='object')throw new Error('Enter both lines and a heading.');

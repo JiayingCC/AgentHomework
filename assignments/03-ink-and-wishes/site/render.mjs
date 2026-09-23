@@ -1,5 +1,7 @@
 import {paintInk} from './brush.mjs';
 import {coupletLayout} from './couplet-model.mjs';
+import {dedicationText} from './journey-model.mjs';
+import {getLesson} from './lessons.mjs';
 export const INK = '#202323';
 export function strokeSVG(data,{active=-1,before=data.strokes.length,ghost=true,label='Character reference'}={}) {
   const paths=data.strokes.map((d,i)=>{
@@ -22,7 +24,8 @@ export function paintStrokes(ctx,strokes,box) {
   }
   ctx.restore();
 }
-export function paintArtwork(canvas,strokes,kind='envelope',{thumbnail=false}={}) {
+export function paintArtwork(canvas,strokes,kind='envelope',{thumbnail=false,dedication={},lesson='an'}={}) {
+  if(kind==='keepsake')return paintKeepsake(canvas,strokes,{thumbnail,dedication,lesson});
   if(kind==='couplet')return paintCouplet(canvas,strokes,{thumbnail});
   const width=thumbnail?360:kind==='envelope'?1200:1200;
   const height=kind==='envelope'?Math.round(width*5/3):width;
@@ -38,6 +41,51 @@ export function paintArtwork(canvas,strokes,kind='envelope',{thumbnail=false}={}
     ctx.font=`italic ${width*.022}px Georgia`;ctx.fillText('with a little ink, and a little care',width/2,height*.858);
   }else paintStrokes(ctx,strokes,{x:0,y:0,w:width,h:height});
   return canvas;
+}
+
+// Wrap by grapheme so long words and Chinese dedications fit as well as English.
+export function wrapText(ctx,text,width) {
+  const segments=typeof Intl.Segmenter==='function'?[...new Intl.Segmenter(undefined,{granularity:'grapheme'}).segment(text)].map(x=>x.segment):[...text];
+  const lines=[];let line='';
+  for(const char of segments){
+    if(char==='\n'){lines.push(line.trim());line='';continue;}
+    if(ctx.measureText(line+char).width>width&&line){
+      const split=line.lastIndexOf(' ');
+      if(split>line.length*.45){lines.push(line.slice(0,split));line=line.slice(split+1)+char;}
+      else{lines.push(line.trim());line=char;}
+    }else line+=char;
+  }
+  if(line.trim()||!lines.length)lines.push(line.trim());return lines;
+}
+export function paintKeepsake(canvas,strokes,{thumbnail=false,dedication={},lesson='an'}={}){
+  const width=thumbnail?360:1200,scale=width/1200;
+  canvas.width=width;canvas.height=width*1.5;
+  const ctx=canvas.getContext('2d'),d=dedicationText(dedication),l=getLesson(lesson)||getLesson('an');
+  ctx.scale(scale,scale);ctx.fillStyle='#fdfcf9';ctx.fillRect(0,0,1200,1800);
+  ctx.fillStyle='#962d32';ctx.fillRect(68,65,1064,6);ctx.strokeStyle='#deddd7';ctx.lineWidth=1;ctx.strokeRect(45,42,1110,1716);
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#5a6060';
+  ctx.font='25px "Avenir Next", sans-serif';
+  ctx.fillText(d.recipient?`FOR ${d.recipient.toLocaleUpperCase()}`:'A LITTLE WISH, IN YOUR OWN HAND',600,139,1000);
+  paintStrokes(ctx,strokes,{x:190,y:240,w:820,h:820});
+  ctx.fillStyle=INK;ctx.font='48px Georgia, "Songti SC", serif';ctx.fillText(`${l.char}  ·  ${l.meaning}`,600,1135);
+  ctx.fillStyle='#626969';ctx.font='28px "Avenir Next", sans-serif';ctx.fillText(l.pinyin,600,1196);
+  ctx.font='34px Georgia, "Songti SC", serif';
+  let font=34,lines=wrapText(ctx,d.message||'A little ink. A wish of your own.',920);
+  while(lines.length>6&&font>22){font-=2;ctx.font=`${font}px Georgia, "Songti SC", serif`;lines=wrapText(ctx,d.message.replace(/\s+/g,' '),920);}
+  const gap=font*1.5;const start=1375-(lines.length-1)*gap/2;
+  lines.forEach((line,i)=>ctx.fillText(line,600,start+i*gap));
+  if(d.sender){ctx.font='italic 30px Georgia, "Songti SC", serif';ctx.fillStyle=INK;ctx.fillText(`With care, ${d.sender}`,600,1610,1000);}
+  ctx.fillStyle='#962d32';ctx.font='20px "Avenir Next", sans-serif';ctx.fillText('INK & WISHES  /  墨与愿',600,1710);
+  return canvas;
+}
+
+// Reveal a licensed filled stroke along its median: direction, not a fading blob.
+let referenceId=0;
+export function animatedStrokeSVG(data,index,{animate=true,label='Stroke reference'}={}){
+  const key=`ink-reference-${++referenceId}`,median=data.medians[index];
+  const path=median.map((p,i)=>`${i?'L':'M'}${p[0]} ${p[1]}`).join(' ');
+  const prior=data.strokes.map((d,i)=>`<path d="${d}" fill="${i<index?'#777f7d':'#e9ebe7'}"/>`).join('');
+  return `<svg viewBox="0 0 1024 1024" role="img" aria-label="${label}"><defs><mask id="${key}"><path d="${path}" pathLength="1" fill="none" stroke="white" stroke-width="150" stroke-linecap="round" stroke-linejoin="round" class="${animate?'stroke-reveal':''}"/></mask></defs><g transform="translate(0 900) scale(1 -1)">${prior}<path d="${data.strokes[index]}" fill="#202323" mask="url(#${key})"/><circle cx="${median[0][0]}" cy="${median[0][1]}" r="11" fill="#962d32"/></g></svg>`;
 }
 export function paintCouplet(canvas,couplet,{thumbnail=false,guides=false}={}){
   const layout=coupletLayout(couplet),scale=thumbnail?.24:1;

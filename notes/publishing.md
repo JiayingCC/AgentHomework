@@ -12,14 +12,14 @@ Ink & Wishes is hosted on GitHub Pages from the public `JiayingCC/AgentHomework`
 
 `scripts/build-pages.mjs` copies the contents of `assignments/03-ink-and-wishes/site/` into the ignored `build/pages/` directory. It cleans the previous bundle first, so removed pages are not carried into a later deployment. Only the Ink & Wishes website assets and a `deployment.json` file are published; development notes and repository metadata are excluded.
 
-The root URL opens the writing studio. Hash routes provide the couplet workshop (`#couplets`), collection (`#collection`), and development workflow (`#process`). `deployment.json` identifies the source commit used to build the site.
+The root URL opens the guided first-keepsake journey (`#learn`). Hash routes also provide free practice (`#studio`), the couplet workshop (`#couplets`), collection (`#collection`), and development workflow (`#process`). `deployment.json` identifies the source commit used to build the site.
 
 ## Automatic updates
 
 After a push to `main`, `.github/workflows/pages.yml`:
 
 1. Checks out the source and sets up Node.js.
-2. Runs the 26 Ink & Wishes tests.
+2. Runs the 32 Ink & Wishes tests.
 3. Builds and uploads the website artifact.
 4. Publishes the artifact through GitHub Pages if the build succeeds.
 

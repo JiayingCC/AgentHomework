@@ -4,9 +4,15 @@ A small, interactive Chinese-calligraphy studio made for an agentic-workflow ass
 
 The student chose the subject and revised the visual brief to **minimal fluid glass, with no pastel palette**. The website uses quiet paper, dark ink, translucent controls, and a red-envelope creation mode.
 
-## Try the website
+## Guided first keepsake
 
-**Public link:** [Ink & Wishes](https://jiayingcc.github.io/AgentHomework/) · [Spring couplet workshop](https://jiayingcc.github.io/AgentHomework/#couplets). Published to GitHub Pages on September 22, 2026; visitors do not need a GitHub account. [Source repository](https://github.com/JiayingCC/AgentHomework).
+Start with scratch paper, learn 安, try a two-question recall activity, and add an optional dedication. Your own handwriting becomes a card inside an animated envelope. Keep an editable copy in this browser or download a 1200 × 1800 PNG. The six-character free studio and couplet workshop remain available alongside this guided journey.
+
+The user approved publication of this redesign on September 23, 2026. See [the implementation and verification record](notes/guided-journey-implementation.md) for completed checks and remaining limitations.
+
+## Try the published website
+
+**Public link:** [Ink & Wishes](https://jiayingcc.github.io/AgentHomework/) · [Spring couplet workshop](https://jiayingcc.github.io/AgentHomework/#couplets). First published to GitHub Pages on September 22, 2026; visitors do not need a GitHub account. [Source repository](https://github.com/JiayingCC/AgentHomework).
 
 From the repository root:
 
@@ -20,6 +26,7 @@ No build step, framework, API key, account, or package installation is required 
 
 ## What works in this release
 
+- A guided beginner journey with scratch paper, directional 安 stroke references, Trace / Watch / Try myself modes, optional recall, personal messages, envelope opening, handwriting replay, editable saves, and PNG export.
 - Six short lessons: **山、水、永、安、春、福**, with pronunciation, meaning, cultural references, and visible credits.
 - A reference for each character (3–13 strokes) you can play, pause, or step through.
 - A character-specific “find the next stroke” game with explanations, retries, and first-attempt feedback: two questions for 山, three for the others.
@@ -35,22 +42,23 @@ Saved works belong to this browser and origin. Clearing browser data can remove 
 
 ## A short class demonstration
 
-1. Choose **山**, open **The story of 山**, then watch its three-stroke reference.
-2. Try its two-question warm-up; explain what happens after a wrong answer.
-3. Draw a few marks. Try undo/redo, switch to 水 and back to see the draft stay, and change brush size.
-4. Choose **Make it a wish**, name the design, and save it.
-5. Reload, open **Your collection**, reopen the work, and download its PNG.
-6. Open **Behind the ink**. Enter a specific improvement and generate a task brief for the next agent iteration.
+1. Open **Start here**, try the brush, then meet **安** and watch or trace its six strokes.
+2. Try the optional recall activity; explain what happens after a wrong answer.
+3. Add a recipient, note, and signature. Seal and open the envelope to see the original handwriting and dedication.
+4. Name and save the keepsake, reload, then reopen it from **My keepsakes** and download its PNG.
+5. Explore **Free practice** or **Couplets** for the broader studio.
+6. Open **How this was made** in the footer. Generate a task brief for the next agent iteration.
 
 ## Write a couplet
 
 1. Open **Couplets · 春联** in the main navigation. Choose a five- or seven-character example, or expand **自定义** to enter your own words.
-2. Select 上联, 下联, or 横批, then a character. Write with the textured brush; use Next character to continue. Each space keeps its own strokes and undo history.
+2. Select **Right strip**, **Left strip**, or **Top banner**, then a character. Write with the textured brush; use Next character to continue. Each space keeps its own strokes and undo history.
 3. Watch the full composition update. The layout faces the doorway: upper line right, lower line left, heading read right to left.
 4. Save even an unfinished couplet to the shared three-slot collection. Reopen it to continue. Download exports only handwritten ink; blank spaces stay blank.
 
 ## Homework evidence
 
+- [Guided first-keepsake iteration](notes/guided-journey-implementation.md)
 - [Latest couplet-workshop iteration](notes/couplet-iteration.md)
 - [Character-library iteration](notes/character-library.md)
 - [Brush and background iteration](notes/brush-iteration.md)
@@ -77,6 +85,6 @@ Human calligraphy review, physical phone/tablet testing, and a three-classmate l
 
 ## Files and credits
 
-`site/brush.mjs` creates the tapered, textured ink marks; `site/app.mjs` connects the interface, `lessons.mjs` holds the six lessons and generates their quizzes, `core.mjs` contains validation rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. `couplet-model.mjs` defines text validation and page layout; `couplets.mjs` connects the separate writing desk. The test suite contains 26 checks.
+`site/brush.mjs` creates the tapered, textured ink marks; `site/app.mjs` connects the interface, `lessons.mjs` holds the six lessons and generates their quizzes, `core.mjs` contains validation rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. `couplet-model.mjs` defines text validation and page layout; `couplets.mjs` connects the separate writing desk. The current test suite contains 32 checks.
 
 The six unmodified character datasets are from **Hanzi Writer Data 2.0.1 / Make Me a Hanzi**, derived from Arphic fonts. The full Arphic Public License is bundled in `site/data/ARPHICPL.TXT`, and its attribution is visible in the website. `site/data/manifest.json` records each asset's checksum. The [source record](notes/sources.md) explains which references support which claims. No museum images or proprietary fonts are bundled.
