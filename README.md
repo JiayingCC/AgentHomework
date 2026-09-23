@@ -2,7 +2,20 @@
 
 A workspace for homework, small experiments, and notes while learning agentic workflows.
 
-## Current project: Mindplay
+## Current project: Ink & Wishes — 墨与愿
+
+[Ink & Wishes](assignments/03-ink-and-wishes/README.md) is an interactive calligraphy studio with a 福 lesson, a stroke-order game, drawing tools, a red-envelope creator, and three editable browser-local save slots. Its visual direction is minimal fluid glass with a neutral palette.
+
+- [Website source](assignments/03-ink-and-wishes/site/)
+- [Actual workflow and fixes](assignments/03-ink-and-wishes/notes/workflow.md)
+- [Verification and limitations](assignments/03-ink-and-wishes/notes/verification.md)
+- [Sources and asset license](assignments/03-ink-and-wishes/notes/sources.md)
+
+Preview with `python3 -m http.server 4190 --bind 127.0.0.1 --directory assignments/03-ink-and-wishes/site`, then open http://127.0.0.1:4190.
+
+The calligraphy website is built locally; GitHub Pages publication remains pending. Preserve the separate Mindplay project when deploying.
+
+## Earlier project: Mindplay
 
 [Mindplay](assignments/02-mindplay/README.md) is a psychology-learning playground with three mini-games, a knowledge garden, and an interactive guide to agent workflows. It uses pastel gradients, textured glass, and an original illustrated mind mascot.
 
@@ -14,7 +27,7 @@ A workspace for homework, small experiments, and notes while learning agentic wo
 
 Preview from the repository root with `python3 -m http.server 4187 --bind 127.0.0.1 --directory assignments/02-mindplay/site`, then open http://127.0.0.1:4187.
 
-The homework repository is private. Public Pages publishing is a separate step; see the assignment README for the deployment options.
+The student has chosen public sharing for this homework. A local preview is not a public link; deployment status must be verified separately.
 
 ## Where things go
 
