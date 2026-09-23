@@ -1,4 +1,5 @@
 import {getLesson,DEFAULT_LESSON,makeQuiz} from './lessons.mjs';
+import {validateCoupletText,coupletSlots} from './couplet-model.mjs';
 export const MAX_WORKS = 3;
 export const MAX_POINTS = 100000;
 export const BRUSH_MODES = ['steady','flow','ink'];
@@ -28,12 +29,24 @@ export function validateStrokes(strokes) {
   return strokes;
 }
 export function validateWork(work) {
-  if (!work || work.version!==1 || typeof work.id!=='string' || !work.id || work.id.length>100 || typeof work.name!=='string' || !work.name.trim() || work.name.length>60 || !['practice','envelope'].includes(work.kind) || !Number.isFinite(work.updatedAt)) throw new Error('This saved work could not be opened.');
+  if (!work || work.version!==1 || typeof work.id!=='string' || !work.id || work.id.length>100 || typeof work.name!=='string' || !work.name.trim() || work.name.length>60 || !['practice','envelope','couplet'].includes(work.kind) || !Number.isFinite(work.updatedAt)) throw new Error('This saved work could not be opened.');
   if(work.lesson!==undefined&&!getLesson(work.lesson))throw new Error('The character for this saved work is not supported.');
   if(work.brush && (!Number.isFinite(work.brush.size)||work.brush.size<5||work.brush.size>60||!BRUSH_MODES.includes(work.brush.mode))) throw new Error('The saved brush settings are not valid.');
   if(work.brush?.ink!==undefined&&(!Number.isFinite(work.brush.ink)||work.brush.ink<.15||work.brush.ink>1))throw new Error('The saved ink setting is not valid.');
-  validateStrokes(work.strokes);
-  if (!work.strokes.length) throw new Error('There are no marks in this saved work.');
+  if(work.kind==='couplet'){
+    const text=validateCoupletText(work.couplet);
+    if(Object.entries(text).some(([key,value])=>value!==work.couplet[key]))throw new Error('The saved couplet contains extra spaces.');
+    const cells=work.couplet.cells,keys=new Set(coupletSlots(work.couplet).map(slot=>slot.key));
+    if(!cells||typeof cells!=='object'||Array.isArray(cells))throw new Error('The saved couplet is not valid.');
+    for(const key of Object.keys(cells))if(!keys.has(key))throw new Error('A saved character is outside the couplet.');
+    const all=[];
+    for(const strokes of Object.values(cells)){validateStrokes(strokes);all.push(...strokes);}
+    validateStrokes(all);
+    if(!all.length)throw new Error('Write at least one character before saving.');
+  }else{
+    validateStrokes(work.strokes);
+    if (!work.strokes.length) throw new Error('There are no marks in this saved work.');
+  }
   return work;
 }
 export function saveDecision(existing, id) {

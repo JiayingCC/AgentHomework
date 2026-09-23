@@ -1,4 +1,5 @@
 import {paintInk} from './brush.mjs';
+import {coupletLayout} from './couplet-model.mjs';
 export const INK = '#202323';
 export function strokeSVG(data,{active=-1,before=data.strokes.length,ghost=true,label='Character reference'}={}) {
   const paths=data.strokes.map((d,i)=>{
@@ -22,6 +23,7 @@ export function paintStrokes(ctx,strokes,box) {
   ctx.restore();
 }
 export function paintArtwork(canvas,strokes,kind='envelope',{thumbnail=false}={}) {
+  if(kind==='couplet')return paintCouplet(canvas,strokes,{thumbnail});
   const width=thumbnail?360:kind==='envelope'?1200:1200;
   const height=kind==='envelope'?Math.round(width*5/3):width;
   canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');
@@ -35,5 +37,21 @@ export function paintArtwork(canvas,strokes,kind='envelope',{thumbnail=false}={}
     ctx.fillText('A WISH FOR YOU',width/2,height*.83);
     ctx.font=`italic ${width*.022}px Georgia`;ctx.fillText('with a little ink, and a little care',width/2,height*.858);
   }else paintStrokes(ctx,strokes,{x:0,y:0,w:width,h:height});
+  return canvas;
+}
+export function paintCouplet(canvas,couplet,{thumbnail=false,guides=false}={}){
+  const layout=coupletLayout(couplet),scale=thumbnail?.24:1;
+  canvas.width=Math.round(layout.width*scale);canvas.height=Math.round(layout.height*scale);
+  const ctx=canvas.getContext('2d');ctx.scale(scale,scale);
+  ctx.fillStyle='#f1f2f3';ctx.fillRect(0,0,layout.width,layout.height);
+  ctx.fillStyle='#962d32';
+  for(const box of Object.values(layout.strips))ctx.fillRect(box.x,box.y,box.w,box.h);
+  ctx.strokeStyle='#dcaaa454';ctx.lineWidth=2;
+  for(const box of Object.values(layout.strips))ctx.strokeRect(box.x+14,box.y+14,box.w-28,box.h-28);
+  for(const slot of layout.cells){
+    const strokes=couplet.cells[slot.key]||[];
+    if(strokes.length)paintStrokes(ctx,strokes,slot);
+    else if(guides){ctx.fillStyle='#ecc2af65';ctx.font=`${slot.w*.74}px "Songti SC","STSong","SimSun",serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(slot.char,slot.x+slot.w/2,slot.y+slot.h*.54);}
+  }
   return canvas;
 }

@@ -3,12 +3,14 @@ import {listWorks,putWork,removeWork} from './storage.mjs';
 import {strokeSVG,paintStrokes,paintArtwork} from './render.mjs';
 import {inkWidth} from './brush.mjs';
 import {LESSONS,DEFAULT_LESSON,getLesson,makeQuiz,checkGlyph} from './lessons.mjs';
+import {setupCouplets} from './couplets.mjs';
 
 const $=selector=>document.querySelector(selector),$$=selector=>[...document.querySelectorAll(selector)];
 const canvas=$('#ink-canvas'),ctx=canvas.getContext('2d'),modal=$('#modal');
 let data,strokes=[],redoStack=[],brushSize=28,brushMode='ink',inkLoad=.78,guide=true,dirty=false,currentId=null,currentName='',works=[];
 let drawingRevision=0,modalSession=0;
 let lesson=getLesson(DEFAULT_LESSON),lessonRequest=0;
+let coupletEditor=null;
 const drafts=new Map(),glyphCache=new Map();
 let activePointer=null,activeStroke=null,lastPointTime=0,pointCount=0,frame=0,sequence=0,playing=false,timer=null,toastTimer=null,modalReturn=null,collectionGeneration=0;
 const copy=value=>structuredClone(value);
@@ -17,13 +19,14 @@ let bakedStrokes=[];
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('#toast').hidden=true;},4200);}
 function stopSequence(){playing=false;clearTimeout(timer);$('#play-symbol').textContent='▶';$('#play-sequence').setAttribute('aria-label','Play stroke sequence');}
 function setRoute(){
-  const route=['studio','collection','process'].includes(location.hash.slice(1))?location.hash.slice(1):'studio';
-  finishStroke();stopSequence();
+  const route=['studio','couplets','collection','process'].includes(location.hash.slice(1))?location.hash.slice(1):'studio';
+  finishStroke();coupletEditor?.finish();stopSequence();
   $$('.view').forEach(el=>el.hidden=el.id!==`view-${route}`);
   $$('[data-route]').forEach(el=>{if(el.dataset.route===route)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
-  document.title=({studio:'Ink & Wishes — your writing desk',collection:'Your collection — Ink & Wishes',process:'Behind the ink — Ink & Wishes'})[route];
+  document.title=({studio:'Ink & Wishes — your writing desk',couplets:'春联工坊 — Ink & Wishes',collection:'Your collection — Ink & Wishes',process:'Behind the ink — Ink & Wishes'})[route];
   if(route==='collection')renderCollection();
   if(route==='studio')requestAnimationFrame(resizeCanvas);
+  if(route==='couplets')requestAnimationFrame(()=>coupletEditor?.resize());
 }
 window.addEventListener('hashchange',setRoute);
 function updateDrawingUI(){
@@ -87,7 +90,7 @@ document.addEventListener('keydown',event=>{
   if(modal.open||$('#view-studio').hidden||/INPUT|TEXTAREA|SELECT/.test(event.target.tagName))return;
   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();event.shiftKey?redo():undo();}
 });
-window.addEventListener('beforeunload',event=>{if((dirty&&strokes.length)||[...drafts.values()].some(d=>d.dirty&&d.strokes.length)){event.preventDefault();event.returnValue='';}});
+window.addEventListener('beforeunload',event=>{if((dirty&&strokes.length)||[...drafts.values()].some(d=>d.dirty&&d.strokes.length)||coupletEditor?.hasUnsaved()){event.preventDefault();event.returnValue='';}});
 $('#toggle-guide').addEventListener('click',()=>{guide=!guide;$('#toggle-guide').setAttribute('aria-pressed',String(guide));$('#guide-grid').hidden=!guide;$('#trace-guide').hidden=!guide;});
 $('#appearance').addEventListener('click',()=>{const solid=document.body.classList.toggle('solid');$('#appearance').setAttribute('aria-pressed',String(solid));$('#appearance').setAttribute('aria-label',solid?'Use glass controls':'Use solid controls');try{localStorage.setItem('ink-wishes-solid',String(solid));}catch{}});
 try{if(localStorage.getItem('ink-wishes-solid')==='true'){$('#appearance').click();}}catch{}
@@ -187,15 +190,15 @@ function showEnvelope(){
   paintArtwork($('#envelope-preview'),strokes,'envelope');$('#save-envelope').onclick=()=>showSave('envelope');$('#download-envelope').onclick=()=>download(copy(strokes),'envelope',currentName||'my-wish');$('#return-writing').onclick=closeModal;
 }
 $('#create-envelope').onclick=showEnvelope;$('#save-practice').onclick=()=>showSave('practice');
-async function showSave(kind){
-  if(!strokes.length)return;finishStroke();const snapshot=copy(strokes),savedRevision=drawingRevision,savedLesson=lesson.id;
+async function showSave(kind,editor=null){
+  if(!editor&&!strokes.length)return;finishStroke();const snapshot=copy(editor?editor.payload:strokes),savedRevision=editor?editor.revision:drawingRevision,savedLesson=lesson.id,savedBrush=copy(editor?editor.brush:{size:brushSize,mode:brushMode,ink:inkLoad}),savedId=editor?editor.id:currentId;
   openModal('KEEP YOUR MARKS',`<h2 id="modal-title">Give this piece a name.</h2><label class="form-label" for="work-name">Work name</label><input id="work-name" type="text" maxlength="60" placeholder="A wish for a friend" autocomplete="off"><p class="modal-note">Saved in this browser, on this device. Up to three editable works.</p><div id="save-slots"></div><p id="save-error" class="modal-error" role="alert"></p><div class="save-actions"><button class="button button-light" id="save-download">Download instead ↓</button><button class="button button-dark" id="commit-save" disabled>Loading collection…</button></div>`);
   const saveSession=modalSession;
-  $('#work-name').value=currentName;$('#save-download').onclick=()=>download(snapshot,kind,$('#work-name').value||'my-wish');
-  let existing,chosenId=currentId,confirmedReplace=false;
+  $('#work-name').value=editor?editor.name:currentName;$('#save-download').onclick=()=>download(snapshot,kind,$('#work-name').value||'my-wish');
+  let existing,chosenId=savedId,confirmedReplace=false;
   try{existing=await listWorks();}catch(error){if(modalSession===saveSession&&$('#save-error'))$('#save-error').textContent=error.message;return;}
   if(modalSession!==saveSession||!$('#commit-save'))return;
-  const decision=saveDecision(existing,currentId);
+  const decision=saveDecision(existing,savedId);
   if(decision==='full'){
     chosenId=null;$('#save-slots').innerHTML='<p>Your collection is full. Select the work you want to replace.</p><div class="work-slots"></div>';
     existing.forEach(work=>{const b=document.createElement('button');b.className='slot-option';b.textContent=work.name;b.setAttribute('aria-pressed','false');b.onclick=()=>{chosenId=work.id;confirmedReplace=true;$$('.slot-option').forEach(el=>el.setAttribute('aria-pressed',String(el===b)));$('#commit-save').disabled=false;$('#commit-save').textContent='Replace selected work';};$('.work-slots').append(b);});
@@ -208,8 +211,8 @@ async function showSave(kind){
     const name=$('#work-name').value.trim();if(!name){$('#save-error').textContent='Give your work a name first.';$('#work-name').focus();return;}
     const button=$('#commit-save');button.disabled=true;button.textContent='Saving…';$('#save-error').textContent='';
     try{
-      const work={version:1,id:chosenId||crypto.randomUUID(),name,kind,lesson:savedLesson,updatedAt:Date.now(),strokes:snapshot,brush:{size:brushSize,mode:brushMode,ink:inkLoad}};
-      await putWork(work,{replace:confirmedReplace});if(drawingRevision===savedRevision){currentId=work.id;currentName=name;dirty=false;updateDrawingUI();}listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});if(modalSession===saveSession)closeModal();toast('Saved in this browser. Find it in your collection.');
+      const work={version:1,id:chosenId||crypto.randomUUID(),name,kind,updatedAt:Date.now(),brush:savedBrush,...(editor?{couplet:snapshot}:{lesson:savedLesson,strokes:snapshot})};
+      await putWork(work,{replace:confirmedReplace});if(editor)coupletEditor.saved(work,savedRevision);else if(drawingRevision===savedRevision){currentId=work.id;currentName=name;dirty=false;updateDrawingUI();}listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});if(modalSession===saveSession)closeModal();toast('Saved in this browser. Find it in your collection.');
     }catch(error){if(modalSession===saveSession&&$('#save-error')){$('#save-error').textContent=error.message;button.disabled=false;button.textContent=confirmedReplace?'Try replacement again':'Try saving again';}}
   };
 }
@@ -218,17 +221,18 @@ async function renderCollection(){
   try{works=await listWorks();}catch(error){if(generation!==collectionGeneration)return;$('#collection-status').textContent=error.message;return;}
   if(generation!==collectionGeneration)return;$('#collection-status').textContent='';$('#nav-count').textContent=String(works.length);
   for(const work of works){
-    const card=document.createElement('article');card.className='collection-card';const art=document.createElement('div');art.className='collection-art';const preview=document.createElement('canvas');preview.setAttribute('aria-label',`Preview of ${work.name}`);art.append(preview);const title=document.createElement('h2');title.textContent=work.name;const meta=document.createElement('p');meta.textContent=`${getLesson(work.lesson??DEFAULT_LESSON)?.char??''} · ${work.kind==='envelope'?'Red-envelope design':'Practice sheet'} · ${new Date(work.updatedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
+    const card=document.createElement('article');card.className='collection-card';const art=document.createElement('div');art.className='collection-art';const preview=document.createElement('canvas');preview.setAttribute('aria-label',`Preview of ${work.name}`);art.append(preview);const title=document.createElement('h2');title.textContent=work.name;const meta=document.createElement('p');meta.textContent=`${work.kind==='couplet'?'春联 · Spring couplet':`${getLesson(work.lesson??DEFAULT_LESSON)?.char??''} · ${work.kind==='envelope'?'Red-envelope design':'Practice sheet'}`} · ${new Date(work.updatedAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
     const actions=document.createElement('div');actions.className='collection-actions';const open=document.createElement('button'),dl=document.createElement('button'),remove=document.createElement('button');for(const b of [open,dl,remove])b.className='text-link';open.textContent='Open & edit ↗';dl.textContent='PNG ↓';remove.textContent='Remove';remove.setAttribute('aria-label',`Remove ${work.name}`);
-    let valid=true;try{validateWork(work);paintArtwork(preview,work.strokes,work.kind,{thumbnail:true});}catch{valid=false;meta.textContent='This saved work could not be read. You can remove it to free a slot.';open.disabled=true;dl.disabled=true;}
+    let valid=true;try{validateWork(work);paintArtwork(preview,work.kind==='couplet'?work.couplet:work.strokes,work.kind,{thumbnail:true});}catch{valid=false;meta.textContent='This saved work could not be read. You can remove it to free a slot.';open.disabled=true;dl.disabled=true;}
     open.onclick=()=>{
       if(!valid)return;
+      if(work.kind==='couplet'){coupletEditor.openWork(work);return;}
       const apply=async()=>{if(await chooseLesson(work.lesson??DEFAULT_LESSON,{work})){location.hash='studio';toast('Opened for editing. Your saved version stays until you replace it.');}};
       const target=drafts.get(work.lesson??DEFAULT_LESSON);
       if(((work.lesson??DEFAULT_LESSON)===lesson.id&&dirty&&strokes.length)||(target?.dirty&&target.strokes.length))confirmAction('Open this saved piece?','This opens the saved version on its character’s desk. Any unsaved draft for that character will be replaced.','Open saved work',apply);else apply();
     };
-    dl.onclick=()=>download(work.strokes,work.kind,work.name);
-    remove.onclick=()=>confirmAction('Remove this saved work?',`“${work.name}” will be removed from this browser’s collection. Download a copy first if you want to keep it.`,'Remove saved work',async()=>{try{await removeWork(work.id);if(currentId===work.id){currentId=null;dirty=!!strokes.length;updateDrawingUI();}for(const draft of drafts.values()){if(draft.currentId===work.id){draft.currentId=null;draft.dirty=!!draft.strokes.length;}}renderCollection();toast('Removed from this collection.');}catch(error){toast(error.message);}});
+    dl.onclick=()=>download(work.kind==='couplet'?work.couplet:work.strokes,work.kind,work.name);
+    remove.onclick=()=>confirmAction('Remove this saved work?',`“${work.name}” will be removed from this browser’s collection. Download a copy first if you want to keep it.`,'Remove saved work',async()=>{try{await removeWork(work.id);coupletEditor.removed(work.id);if(currentId===work.id){currentId=null;dirty=!!strokes.length;updateDrawingUI();}for(const draft of drafts.values()){if(draft.currentId===work.id){draft.currentId=null;draft.dirty=!!draft.strokes.length;}}renderCollection();toast('Removed from this collection.');}catch(error){toast(error.message);}});
     actions.append(open,dl,remove);card.append(art,title,meta,actions);$('#collection-grid').append(card);
   }
   for(let i=works.length;i<3;i++){
@@ -283,4 +287,5 @@ async function boot(){
   setRoute();updateDrawingUI();listWorks().then(rows=>{works=rows;$('#nav-count').textContent=String(rows.length);}).catch(()=>{});
   await chooseLesson(DEFAULT_LESSON,{initial:true});
 }
+coupletEditor=setupCouplets({toast,confirmAction,openModal,closeModal,onSave:editor=>showSave('couplet',editor),download});
 boot();

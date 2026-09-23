@@ -22,6 +22,7 @@ No build step, framework, API key, account, or package installation is required.
 - A reference for each character (3–13 strokes) you can play, pause, or step through.
 - A character-specific “find the next stroke” game with explanations, retries, and first-attempt feedback: two questions for 山, three for the others.
 - A drawing surface with a size slider, optional tracing guide, undo/redo, and clear confirmation. Ink brush / 毛笔 is the default: tapered strokes, speed-responsive width, bristle texture, and an ink-load control. Steady and Flow remain available.
+- A **Couplets · 春联** workshop with two sourced examples, custom upper/lower lines and heading, character-by-character ink writing, undo/redo, and a live red-paper composition. Save the whole couplet for editing or export an 1800 × 1700 PNG.
 - A red-envelope front made from your actual drawing, with a 1200 × 2000 PNG download. A practice sheet downloads at 1200 × 1200.
 - Three named, editable works saved in this browser through IndexedDB. Each work remembers its character. Reopen, replace, download, or remove a work. A full collection requires an explicit replacement choice.
 - Separate drafts and undo histories while switching characters. Save a draft to keep it after a reload; unsaved drafts last only for the current page session.
@@ -39,9 +40,17 @@ Saved works belong to this browser and origin. Clearing browser data can remove 
 5. Reload, open **Your collection**, reopen the work, and download its PNG.
 6. Open **Behind the ink**. Enter a specific improvement and generate a task brief for the next agent iteration.
 
+## Write a couplet
+
+1. Open **Couplets · 春联** in the main navigation. Choose a five- or seven-character example, or expand **自定义** to enter your own words.
+2. Select 上联, 下联, or 横批, then a character. Write with the textured brush; use Next character to continue. Each space keeps its own strokes and undo history.
+3. Watch the full composition update. The layout faces the doorway: upper line right, lower line left, heading read right to left.
+4. Save even an unfinished couplet to the shared three-slot collection. Reopen it to continue. Download exports only handwritten ink; blank spaces stay blank.
+
 ## Homework evidence
 
-- [Latest character-library iteration](notes/character-library.md)
+- [Latest couplet-workshop iteration](notes/couplet-iteration.md)
+- [Character-library iteration](notes/character-library.md)
 - [Brush and background iteration](notes/brush-iteration.md)
 - [Design decisions](notes/design.md)
 - [Actual workflow and iterations](notes/workflow.md)
@@ -60,13 +69,13 @@ The website runs in the browser without live AI calls. “Behind the ink” reco
 
 ## Limits and the next iteration
 
-This release focuses on a complete practice-to-keepsake journey across six characters. Couplets, a searchable dictionary, accounts, cloud syncing, pen tilt, realistic ink diffusion, and aesthetic grading remain outside this build. Compatible pens can provide pressure input to Ink brush, but physical pen testing remains pending. No learner study has compared the brush modes.
+This release includes six stroke-model lessons and a separate couplet workshop. Couplet guides use a system print font rather than per-character stroke animations. Custom text is checked for matching lengths, not tones or literary parallelism. A searchable dictionary, accounts, cloud syncing, pen tilt, realistic ink diffusion, and aesthetic grading remain outside this build. Compatible pens can provide pressure input to Ink brush, but physical pen testing remains pending. No learner study has compared the brush modes.
 
-Human calligraphy review, physical phone/tablet testing, and a three-classmate learner trial are still pending. The next useful iteration is to collect those observations, correct the highest-impact issue, and then add a reviewed Spring Festival couplet layout. Publication to GitHub Pages and the student's own reflection remain assignment steps.
+Human calligraphy review, physical phone/tablet testing, and a three-classmate learner trial are still pending. The next useful iteration is to collect those observations, correct the highest-impact issue, including a review of the new couplet wording and layout. Publication to GitHub Pages and the student's own reflection remain assignment steps.
 
 ## Files and credits
 
-`site/brush.mjs` creates the tapered, textured ink marks; `site/app.mjs` connects the interface, `lessons.mjs` holds the six lessons and generates their quizzes, `core.mjs` contains validation rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. The test suite contains 20 checks.
+`site/brush.mjs` creates the tapered, textured ink marks; `site/app.mjs` connects the interface, `lessons.mjs` holds the six lessons and generates their quizzes, `core.mjs` contains validation rules, `storage.mjs` handles editable works, and `render.mjs` draws the previews and exports. `couplet-model.mjs` defines text validation and page layout; `couplets.mjs` connects the separate writing desk. The test suite contains 26 checks.
 
 The six unmodified character datasets are from **Hanzi Writer Data 2.0.1 / Make Me a Hanzi**, derived from Arphic fonts. The full Arphic Public License is bundled in `site/data/ARPHICPL.TXT`, and its attribution is visible in the website. `site/data/manifest.json` records each asset's checksum. The [source record](notes/sources.md) explains which references support which claims. No museum images or proprietary fonts are bundled.
 

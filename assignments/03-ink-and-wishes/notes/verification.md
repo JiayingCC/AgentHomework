@@ -54,3 +54,9 @@ The full suite now reports **20 passed, 0 failed**. Added checks cover all six c
 Browser checks confirmed correct guide/reference counts for 山 (3), 水 (4), 永 (5), 安 (6), 春 (9), and 福 (13). 山 playback reached 3/3 and stopped. Its two-question quiz accepted a corrected answer without inflating the first-attempt result (1/2). Switching characters preserved strokes and undo/redo history. A named 山 practice survived reload, displayed 山 in its collection card, and reopened the correct lesson with its stroke intact. Its culture story showed the matching meaning and source links. The six choices fit a 390 × 844 viewport without horizontal overflow. No console errors were reported during this flow.
 
 See the [character-library iteration](character-library.md) for the scope assumption and remaining review needs.
+
+## Follow-up: couplets
+
+The suite now reports **26 passed, 0 failed**, including six couplet-specific checks. Browser interaction verified independent character ink, undo/redo, all three parts, save/reload/reopen, mismatched-line feedback, confirmation cancellation, custom lines, and both presets. A downloaded PNG was 1800 × 1700 and 68,493 bytes; it contained the three test marks without guides or UI. A single-character save still worked in the same collection. The phone-width check used 390 × 844, with no horizontal overflow. No console errors were observed. Test works were removed after checking.
+
+See [the couplet iteration](couplet-iteration.md) for exact scope, observations, and remaining review needs.

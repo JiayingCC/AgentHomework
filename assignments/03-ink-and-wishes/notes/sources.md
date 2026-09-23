@@ -42,3 +42,13 @@ The expanded library also uses these Ministry of Education entries, checked Sept
 | [山水](https://dict.concised.moe.edu.tw/dictView.jsp?ID=34440&la=0&powerMode=0) | Landscape and landscape painting, used for the 山/水 cultural connection. |
 
 `shan.json`, `shui.json`, `yong.json`, `an.json`, and `chun.json` are downloaded unchanged from the same pinned `hanzi-writer-data@2.0.1` package. Their selected models contain 3, 4, 5, 6, and 9 strokes respectively. [The manifest](../site/data/manifest.json) records each model's ID, character, count, package version, and checksum; filenames are the ID plus `.json`. The full bundled Arphic license and attribution apply to all six character assets. Step captions and short lesson explanations are project-authored; human review remains pending.
+
+## Couplet workshop
+
+Checked September 22, 2026:
+
+- [CCTV: Spring Festival couplets and hopes](https://news.cctv.cn/2025/01/27/ARTIBOkWCYOUApK8PUngdEIt250127.shtml) documents the traditional lines 新年纳余庆 / 佳节号长春. The app uses this wording without claiming it resolves historical attribution or variant readings.
+- [NDRC: giving Spring Festival couplets](https://www.ndrc.gov.cn/fzggw/jgsj/ltj/sjdt/202301/t20230117_1346733.html) records 天增岁月人增寿 / 春满乾坤福满门 in a public writing activity. This supports the chosen example, not a claim about its original author.
+- [Zhongyuan district government, republishing Henan broadcasting: placement conventions](https://www.zhongyuan.gov.cn/hlwpy/9901488.jhtml) describes facing the doorway, upper on the right, lower on the left, and a heading read right to left; it also discusses modern alternatives. The app uses this bounded placement guidance, not the article's broader folklore or universal etiquette claims.
+
+The headings 新春大吉 and 福满人间 are project-selected pairings, visibly identified as suggestions. Short English meanings and the cultural explanation are project-authored paraphrases. The couplet guides use local system print fonts; no additional font file or character stroke dataset is bundled. No image from these sources was copied.

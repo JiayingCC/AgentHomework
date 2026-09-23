@@ -4,7 +4,7 @@ A workspace for homework, small experiments, and notes while learning agentic wo
 
 ## Current project: Ink & Wishes — 墨与愿
 
-[Ink & Wishes](assignments/03-ink-and-wishes/README.md) is an interactive calligraphy studio with six character lessons (山、水、永、安、春、福), stroke-order games, an ink brush, a red-envelope creator, and three editable browser-local save slots. Its visual direction is minimal fluid glass with a neutral palette and a faint ink-wash landscape.
+[Ink & Wishes](assignments/03-ink-and-wishes/README.md) is an interactive calligraphy studio with six character lessons (山、水、永、安、春、福), stroke-order games, an ink brush, a couplet workshop, a red-envelope creator, and three editable browser-local save slots. Its visual direction is minimal fluid glass with a neutral palette and a faint ink-wash landscape.
 
 - [Website source](assignments/03-ink-and-wishes/site/)
 - [Actual workflow and fixes](assignments/03-ink-and-wishes/notes/workflow.md)
